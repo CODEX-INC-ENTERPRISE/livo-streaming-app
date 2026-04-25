@@ -55,8 +55,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 1.2, 1.3_
 
 
-- [ ] 3. Backend: User profile and social features
-  - [ ] 3.1 Implement user profile endpoints
+- [x] 3. Backend: User profile and social features
+  - [x] 3.1 Implement user profile endpoints
     - Create GET /api/users/:userId endpoint to retrieve public profile
     - Create PUT /api/users/:userId endpoint to update profile
     - Validate display name uniqueness before updates
@@ -64,7 +64,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement image upload to CDN or cloud storage
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
   
-  - [ ] 3.2 Implement social connection endpoints
+  - [x] 3.2 Implement social connection endpoints
     - Create POST /api/users/:userId/follow endpoint
     - Create DELETE /api/users/:userId/follow/:targetUserId endpoint
     - Update follower and following arrays in user documents
@@ -73,7 +73,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Trigger notification on new follower
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
   
-  - [ ] 3.3 Implement user blocking and reporting
+  - [x] 3.3 Implement user blocking and reporting
     - Create POST /api/users/:userId/block endpoint
     - Update blockedUserIds array in user document
     - Create POST /api/users/:userId/report endpoint
