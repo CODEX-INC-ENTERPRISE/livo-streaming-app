@@ -1,5 +1,6 @@
 const express = require('express');
 const streamController = require('../controllers/streamController');
+const giftController = require('../controllers/giftController');
 const { authenticate } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validation');
 const Joi = require('joi');
@@ -22,6 +23,10 @@ const pinMessageSchema = Joi.object({
 const moderateSchema = Joi.object({
   action: Joi.string().valid('mute', 'kick', 'block', 'assign_moderator').required(),
   targetUserId: Joi.string().required(),
+});
+
+const sendGiftSchema = Joi.object({
+  giftId: Joi.string().required(),
 });
 
 // Stream management endpoints
@@ -78,6 +83,14 @@ router.post(
   authenticate,
   validateRequest(moderateSchema),
   streamController.moderateStream
+);
+
+// Virtual gift endpoint
+router.post(
+  '/:streamId/gift',
+  authenticate,
+  validateRequest(sendGiftSchema),
+  giftController.sendGift
 );
 
 module.exports = router;

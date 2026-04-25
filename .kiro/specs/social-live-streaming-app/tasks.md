@@ -198,15 +198,15 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Broadcast moderation actions via WebSocket
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 7. Backend: Virtual gift system
-  - [ ] 7.1 Create virtual gifts catalog
+- [x] 7. Backend: Virtual gift system
+  - [x] 7.1 Create virtual gifts catalog
     - Create POST /api/admin/gifts endpoint to add gifts
     - Create GET /api/gifts endpoint to list available gifts
     - Store gift data with coin price, diamond value, and asset URLs
     - Implement gift categories for organization
     - _Requirements: 9.1_
   
-  - [ ] 7.2 Implement gift sending endpoint
+  - [x] 7.2 Implement gift sending endpoint
     - Create POST /api/streams/:streamId/gift endpoint
     - Validate viewer has sufficient coins in wallet
     - Deduct coin price from viewer's wallet atomically
