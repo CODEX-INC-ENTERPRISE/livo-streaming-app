@@ -20,15 +20,15 @@ The implementation follows a bottom-up approach: core infrastructure first, then
   - Create health check endpoint at /health
   - _Requirements: 28.4, 34.1, 34.2, 34.4, 35.1, 35.3_
 
-- [ ] 2. Backend: Authentication and user management
-  - [ ] 2.1 Implement Firebase Authentication integration
+- [-] 2. Backend: Authentication and user management
+  - [x] 2.1 Implement Firebase Authentication integration
     - Initialize Firebase Admin SDK with service account credentials
     - Create authentication middleware to verify Firebase tokens
     - Implement JWT token generation for session management
     - Create token verification middleware for protected routes
     - _Requirements: 1.5, 2.1, 2.4, 30.1, 30.2_
   
-  - [ ] 2.2 Implement user registration endpoints
+  - [x] 2.2 Implement user registration endpoints
     - Create POST /api/auth/register endpoint
     - Implement phone number registration with OTP validation
     - Implement email registration with OTP validation
@@ -39,14 +39,14 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Initialize user wallet on registration
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 31.1_
   
-  - [ ] 2.3 Implement user login and logout endpoints
+  - [x] 2.3 Implement user login and logout endpoints
     - Create POST /api/auth/login endpoint with credential validation
     - Create POST /api/auth/logout endpoint with session invalidation
     - Implement session timeout logic (30 days)
     - Return authentication token and user data on successful login
     - _Requirements: 2.1, 2.2, 2.3, 2.6_
   
-  - [ ] 2.4 Implement OTP sending service
+  - [x] 2.4 Implement OTP sending service
     - Create POST /api/auth/send-otp endpoint
     - Integrate with Render email service for email OTP
     - Integrate with SMS gateway for phone OTP

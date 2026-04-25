@@ -22,6 +22,25 @@ const configSchema = Joi.object({
   AGORA_APP_ID: Joi.string().optional(),
   AGORA_APP_CERTIFICATE: Joi.string().optional(),
   
+  JWT_SECRET: Joi.string().required().description('JWT secret key'),
+  JWT_EXPIRATION: Joi.string().default('30d'),
+  
+  EMAIL_HOST: Joi.string().optional(),
+  EMAIL_PORT: Joi.number().default(587),
+  EMAIL_USER: Joi.string().optional(),
+  EMAIL_PASSWORD: Joi.string().optional(),
+  EMAIL_FROM: Joi.string().default('noreply@example.com'),
+  
+  SMS_GATEWAY_URL: Joi.string().optional(),
+  SMS_GATEWAY_API_KEY: Joi.string().optional(),
+  
+  OTP_EXPIRATION_SECONDS: Joi.number().default(300),
+  OTP_RATE_LIMIT_WINDOW: Joi.number().default(900),
+  OTP_RATE_LIMIT_MAX: Joi.number().default(5),
+  
+  BCRYPT_ROUNDS: Joi.number().default(12),
+  SESSION_TIMEOUT_DAYS: Joi.number().default(30),
+  
   COMMISSION_RATE: Joi.number().min(0).max(1).default(0.15),
   DIAMOND_TO_CREDIT_RATE: Joi.number().min(0).default(0.01),
   MIN_WITHDRAWAL_DIAMONDS: Joi.number().min(0).default(1000),
@@ -58,6 +77,35 @@ module.exports = {
   agora: {
     appId: envVars.AGORA_APP_ID,
     appCertificate: envVars.AGORA_APP_CERTIFICATE,
+  },
+  
+  jwt: {
+    secret: envVars.JWT_SECRET,
+    expiration: envVars.JWT_EXPIRATION,
+  },
+  
+  email: {
+    host: envVars.EMAIL_HOST,
+    port: envVars.EMAIL_PORT,
+    user: envVars.EMAIL_USER,
+    password: envVars.EMAIL_PASSWORD,
+    from: envVars.EMAIL_FROM,
+  },
+  
+  sms: {
+    gatewayUrl: envVars.SMS_GATEWAY_URL,
+    apiKey: envVars.SMS_GATEWAY_API_KEY,
+  },
+  
+  otp: {
+    expirationSeconds: envVars.OTP_EXPIRATION_SECONDS,
+    rateLimitWindow: envVars.OTP_RATE_LIMIT_WINDOW,
+    rateLimitMax: envVars.OTP_RATE_LIMIT_MAX,
+  },
+  
+  security: {
+    bcryptRounds: envVars.BCRYPT_ROUNDS,
+    sessionTimeoutDays: envVars.SESSION_TIMEOUT_DAYS,
   },
   
   businessRules: {

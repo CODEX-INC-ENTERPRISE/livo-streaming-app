@@ -2,6 +2,7 @@ const app = require('./app');
 const config = require('./config');
 const connectDatabase = require('./config/database');
 const { connectRedis } = require('./config/redis');
+const { initializeFirebase } = require('./config/firebase');
 const logger = require('./utils/logger');
 
 const startServer = async () => {
@@ -16,6 +17,14 @@ const startServer = async () => {
 
     await connectRedis();
     logger.info('Redis connection established');
+
+    try {
+      initializeFirebase();
+    } catch (error) {
+      logger.warn('Firebase initialization skipped', {
+        error: error.message,
+      });
+    }
 
     const server = app.listen(config.port, () => {
       logger.info('Server started successfully', {
