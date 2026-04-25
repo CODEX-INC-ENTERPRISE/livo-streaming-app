@@ -81,8 +81,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement blocking logic to prevent all interactions
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [-] 4. Backend: Database models and indexes
-  - [ ] 4.1 Create MongoDB schemas and models
+- [x] 4. Backend: Database models and indexes
+  - [x] 4.1 Create MongoDB schemas and models
     - Define User model with all fields from design
     - Define Host model with statistics and approval fields
     - Define Stream model with viewer tracking and moderation
@@ -96,7 +96,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Define Agent model with commission tracking
     - _Requirements: All data requirements_
   
-  - [ ] 4.2 Create database indexes for performance
+  - [x] 4.2 Create database indexes for performance
     - Create unique indexes on users: phoneNumber, email, displayName
     - Create compound index on users: { displayName: 1, isBlocked: 1 }
     - Create indexes on streams: hostId, status, startedAt

@@ -100,6 +100,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.index({ displayName: 1, isBlocked: 1 });
+userSchema.index({ followerIds: 1 });
 
 userSchema.methods.comparePassword = async function(candidatePassword) {
   if (!this.passwordHash) {
