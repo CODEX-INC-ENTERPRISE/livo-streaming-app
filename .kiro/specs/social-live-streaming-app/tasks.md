@@ -146,8 +146,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Ensure notification delivery within 2 seconds
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.7_
 
-- [ ] 6. Backend: Live streaming endpoints
-  - [ ] 6.1 Implement stream start endpoint
+- [x] 6. Backend: Live streaming endpoints
+  - [x] 6.1 Implement stream start endpoint
     - Create POST /api/streams/start endpoint
     - Validate host permissions (isHost flag)
     - Check system capacity (max 5000 concurrent viewers)
@@ -157,7 +157,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Return stream ID, Agora channel ID, and token
     - _Requirements: 6.1, 6.6, 28.1_
   
-  - [ ] 6.2 Implement stream end endpoint
+  - [x] 6.2 Implement stream end endpoint
     - Create POST /api/streams/:streamId/end endpoint
     - Validate host ownership
     - Update stream document with end time and statistics
@@ -166,7 +166,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Return stream statistics
     - _Requirements: 6.4, 6.5, 7.5_
   
-  - [ ] 6.3 Implement stream viewing endpoints
+  - [x] 6.3 Implement stream viewing endpoints
     - Create GET /api/streams/active endpoint with pagination
     - Create POST /api/streams/:streamId/join endpoint
     - Generate Agora viewer token
@@ -178,7 +178,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 7.1, 7.3, 7.6_
 
 
-  - [ ] 6.4 Implement stream chat endpoints
+  - [x] 6.4 Implement stream chat endpoints
     - Create POST /api/streams/:streamId/chat endpoint
     - Validate message length (max 500 characters)
     - Store message in chatMessages collection
@@ -188,7 +188,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Broadcast pinned message to all viewers
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
   
-  - [ ] 6.5 Implement stream moderation endpoints
+  - [x] 6.5 Implement stream moderation endpoints
     - Create POST /api/streams/:streamId/moderate endpoint
     - Validate host or moderator permissions
     - Implement mute action (add to mutedUserIds)
