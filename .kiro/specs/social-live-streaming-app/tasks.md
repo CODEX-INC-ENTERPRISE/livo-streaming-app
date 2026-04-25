@@ -217,8 +217,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Send notification to host
     - _Requirements: 9.2, 9.3, 9.4, 9.5, 9.6, 14.5_
 
-- [ ] 8. Backend: Wallet and transaction management
-  - [ ] 8.1 Implement wallet endpoints
+- [x] 8. Backend: Wallet and transaction management
+  - [x] 8.1 Implement wallet endpoints
     - Create GET /api/wallet/:userId endpoint
     - Return coin balance, diamond balance, and recent transactions
     - Create GET /api/wallet/transactions/:userId endpoint with pagination
@@ -226,7 +226,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Ensure wallet balances cannot become negative
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
   
-  - [ ] 8.2 Implement transaction recording service
+  - [x] 8.2 Implement transaction recording service
     - Create transaction service to record all wallet changes
     - Implement atomic wallet updates with transaction logging
     - Store transaction metadata (gift ID, stream ID, payment info)
