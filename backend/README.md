@@ -1,4 +1,4 @@
-# Social Live Streaming Backend
+# Livo Live Streaming Backend
 
 Backend service for the social live streaming application built with Node.js and Express.js.
 

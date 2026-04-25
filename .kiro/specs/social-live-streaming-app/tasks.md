@@ -81,7 +81,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement blocking logic to prevent all interactions
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 4. Backend: Database models and indexes
+- [-] 4. Backend: Database models and indexes
   - [ ] 4.1 Create MongoDB schemas and models
     - Define User model with all fields from design
     - Define Host model with statistics and approval fields
