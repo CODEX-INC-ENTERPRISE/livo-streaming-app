@@ -3,6 +3,7 @@ const config = require('./config');
 const connectDatabase = require('./config/database');
 const { connectRedis } = require('./config/redis');
 const { initializeFirebase } = require('./config/firebase');
+const { initializeSocket } = require('./config/socket');
 const logger = require('./utils/logger');
 
 const startServer = async () => {
@@ -33,6 +34,10 @@ const startServer = async () => {
         timestamp: new Date().toISOString(),
       });
     });
+
+    // Initialize Socket.io
+    await initializeSocket(server);
+    logger.info('Socket.io initialized');
 
     const gracefulShutdown = async (signal) => {
       logger.info(`${signal} received, starting graceful shutdown`);

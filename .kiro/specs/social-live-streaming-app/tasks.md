@@ -108,8 +108,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 39.1, 39.5_
 
 
-- [ ] 5. Backend: Real-time communication with Socket.io
-  - [ ] 5.1 Set up Socket.io server with Redis adapter
+- [x] 5. Backend: Real-time communication with Socket.io
+  - [x] 5.1 Set up Socket.io server with Redis adapter
     - Install and configure Socket.io with Express server
     - Configure Redis adapter for horizontal scaling
     - Implement authentication middleware for WebSocket connections
@@ -117,7 +117,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement heartbeat mechanism for connection health
     - _Requirements: 28.1, 28.2, 28.3_
   
-  - [ ] 5.2 Implement stream-related WebSocket events
+  - [x] 5.2 Implement stream-related WebSocket events
     - Handle 'stream:join' event to add viewer to stream room
     - Handle 'stream:leave' event to remove viewer from stream room
     - Handle 'stream:chat' event to broadcast chat messages
@@ -130,7 +130,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Emit 'stream:moderation' for mute/kick actions
     - _Requirements: 6.1, 7.1, 8.1, 8.2, 9.3, 10.1, 10.2, 10.3_
   
-  - [ ] 5.3 Implement voice room WebSocket events
+  - [x] 5.3 Implement voice room WebSocket events
     - Handle 'voice:join' event to add participant to voice room
     - Handle 'voice:leave' event to remove participant from voice room
     - Handle 'voice:raise-hand' event to notify host
@@ -141,7 +141,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Emit 'voice:hand-raised' to notify host
     - _Requirements: 11.1, 11.5, 12.1, 12.4, 12.5, 12.6, 13.1, 13.2_
   
-  - [ ] 5.4 Implement notification WebSocket events
+  - [x] 5.4 Implement notification WebSocket events
     - Emit 'notification:new' for real-time notifications
     - Ensure notification delivery within 2 seconds
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.7_
