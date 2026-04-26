@@ -17,6 +17,13 @@ const purchaseCoinsSchema = Joi.object({
   currency: Joi.string().valid('USD', 'SAR', 'EUR', 'GBP').default('USD'),
 });
 
+const createWithdrawalSchema = Joi.object({
+  userId: Joi.string().required(),
+  diamondAmount: Joi.number().min(1000).required(),
+  paymentMethod: Joi.string().valid('bank_transfer', 'paypal', 'stripe').required(),
+  paymentDetails: Joi.object().optional(),
+});
+
 // Get wallet information (balance + recent transactions)
 router.get('/:userId', authenticate, walletController.getWallet);
 
@@ -31,6 +38,11 @@ router.post('/purchase-coins', authenticate, validateRequest(purchaseCoinsSchema
 
 // Get available coin packages
 router.get('/packages', walletController.getCoinPackages);
+
+// Withdrawal endpoints
+router.post('/withdraw', authenticate, validateRequest(createWithdrawalSchema), walletController.createWithdrawal);
+router.get('/withdrawals/:userId', authenticate, walletController.getWithdrawals);
+router.get('/withdrawals/:userId/:withdrawalId', authenticate, walletController.getWithdrawalById);
 
 // Webhook endpoints (no authentication - verified by signature)
 router.post('/webhook/stripe', express.raw({ type: 'application/json' }), walletController.handleStripeWebhook);

@@ -215,6 +215,14 @@ exports.sendGift = async (req, res, next) => {
     stream.totalGiftsReceived += 1;
     await stream.save({ session });
 
+    // Update host statistics
+    const host = await Host.findOne({ userId: hostId }).session(session);
+    if (host) {
+      host.statistics.totalGiftsReceived += 1;
+      host.statistics.totalDiamondsEarned += gift.diamondValue;
+      await host.save({ session });
+    }
+
     // Create transaction record for sender
     const senderTransaction = new Transaction({
       userId: senderId,
@@ -244,6 +252,15 @@ exports.sendGift = async (req, res, next) => {
       },
     });
     await hostTransaction.save({ session });
+
+    // Calculate and credit commission to agent if host has an agent
+    const agentController = require('./agentController');
+    const commissionData = await agentController.calculateCommission(hostId, gift.diamondValue, session);
+    
+    if (commissionData) {
+      // Credit commission to agent within the same transaction
+      await agentController.creditCommissionToAgent(commissionData, session);
+    }
 
     // Commit transaction
     await session.commitTransaction();

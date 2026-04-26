@@ -429,3 +429,251 @@ exports.handleStcPayWebhook = async (req, res, next) => {
     });
   }
 };
+
+const WithdrawalRequest = require('../models/WithdrawalRequest');
+const Host = require('../models/Host');
+
+/**
+ * Create withdrawal request
+ * POST /api/wallet/withdraw
+ */
+exports.createWithdrawal = async (req, res, next) => {
+  try {
+    const { userId, diamondAmount, paymentMethod, paymentDetails } = req.body;
+
+    // Authorization check - users can only create withdrawals for themselves
+    if (req.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You can only create withdrawals for your own account',
+      });
+    }
+
+    // Check if user is a host
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    if (!user.isHost) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Only hosts can create withdrawal requests',
+      });
+    }
+
+    // Validate minimum diamond balance (1000 diamonds)
+    if (diamondAmount < 1000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Minimum withdrawal amount is 1000 diamonds',
+      });
+    }
+
+    // Get wallet
+    const wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Wallet not found',
+      });
+    }
+
+    // Check if user has sufficient diamond balance
+    if (wallet.diamondBalance < diamondAmount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Insufficient diamond balance',
+      });
+    }
+
+    // Calculate real credit amount using conversion rate
+    // Default conversion rate: 100 diamonds = 1 USD
+    const conversionRate = process.env.DIAMOND_TO_USD_RATE || 0.01; // 1 diamond = $0.01
+    const creditAmount = diamondAmount * conversionRate;
+
+    // Deduct diamonds from wallet
+    await wallet.deductDiamonds(diamondAmount);
+
+    // Create withdrawal request
+    const withdrawalRequest = new WithdrawalRequest({
+      userId,
+      diamondAmount,
+      creditAmount,
+      status: 'pending',
+      paymentMethod,
+      paymentDetails,
+    });
+
+    await withdrawalRequest.save();
+
+    // Create transaction record
+    const transaction = new Transaction({
+      userId,
+      type: 'withdrawal',
+      amount: diamondAmount,
+      currency: 'diamonds',
+      description: `Withdrawal request for ${diamondAmount} diamonds`,
+      metadata: {
+        withdrawalRequestId: withdrawalRequest._id,
+        status: 'pending',
+        creditAmount,
+        paymentMethod,
+      },
+    });
+
+    await transaction.save();
+
+    logger.info('Withdrawal request created', {
+      withdrawalRequestId: withdrawalRequest._id,
+      userId,
+      diamondAmount,
+      creditAmount,
+      paymentMethod,
+      newDiamondBalance: wallet.diamondBalance,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        withdrawalRequestId: withdrawalRequest._id,
+        diamondAmount,
+        creditAmount,
+        status: withdrawalRequest.status,
+        requestedAt: withdrawalRequest.requestedAt,
+        newDiamondBalance: wallet.diamondBalance,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to create withdrawal request', {
+      userId: req.body.userId,
+      error: error.message,
+    });
+    next(error);
+  }
+};
+
+/**
+ * Get withdrawal requests for a user
+ * GET /api/wallet/withdrawals/:userId
+ */
+exports.getWithdrawals = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    // Authorization check - users can only view their own withdrawals
+    if (req.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You can only view your own withdrawal requests',
+      });
+    }
+
+    // Build query
+    const query = { userId };
+    if (status) {
+      query.status = status;
+    }
+
+    // Validate pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Invalid pagination parameters',
+      });
+    }
+
+    // Get withdrawal requests
+    const withdrawals = await WithdrawalRequest.find(query)
+      .sort({ requestedAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    const total = await WithdrawalRequest.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        withdrawals,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to get withdrawal requests', {
+      userId: req.params.userId,
+      error: error.message,
+    });
+    next(error);
+  }
+};
+
+/**
+ * Get withdrawal request by ID
+ * GET /api/wallet/withdrawals/:userId/:withdrawalId
+ */
+exports.getWithdrawalById = async (req, res, next) => {
+  try {
+    const { userId, withdrawalId } = req.params;
+
+    // Authorization check - users can only view their own withdrawals
+    if (req.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You can only view your own withdrawal requests',
+      });
+    }
+
+    const withdrawal = await WithdrawalRequest.findOne({
+      _id: withdrawalId,
+      userId,
+    });
+
+    if (!withdrawal) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Withdrawal request not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        withdrawal,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to get withdrawal request', {
+      userId: req.params.userId,
+      withdrawalId: req.params.withdrawalId,
+      error: error.message,
+    });
+    next(error);
+  }
+};
+
+// Need to import User model
+const User = require('../models/User');

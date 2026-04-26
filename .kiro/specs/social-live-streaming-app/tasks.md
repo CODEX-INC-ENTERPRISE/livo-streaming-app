@@ -20,7 +20,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
   - Create health check endpoint at /health
   - _Requirements: 28.4, 34.1, 34.2, 34.4, 35.1, 35.3_
 
-- [-] 2. Backend: Authentication and user management
+- [x] 2. Backend: Authentication and user management
   - [x] 2.1 Implement Firebase Authentication integration
     - Initialize Firebase Admin SDK with service account credentials
     - Create authentication middleware to verify Firebase tokens
@@ -276,8 +276,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Log all payment attempts with IP and device info
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 32.5_
 
-- [ ] 10. Backend: Host and agency management
-  - [ ] 10.1 Implement host registration
+- [x] 10. Backend: Host and agency management
+  - [x] 10.1 Implement host registration
     - Create POST /api/hosts/register endpoint
     - Store host profile with pending approval status
     - Create GET /api/admin/hosts/pending endpoint for admin review
@@ -285,7 +285,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Update user isHost flag on approval
     - _Requirements: 18.1, 18.2, 18.3, 18.5_
   
-  - [ ] 10.2 Implement host earnings dashboard
+  - [x] 10.2 Implement host earnings dashboard
     - Create GET /api/hosts/:userId/earnings endpoint
     - Calculate total diamonds earned from transactions
     - Calculate pending withdrawal amounts
@@ -293,7 +293,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Return earnings breakdown
     - _Requirements: 18.4_
   
-  - [ ] 10.3 Implement diamond withdrawal system
+  - [x] 10.3 Implement diamond withdrawal system
     - Create POST /api/wallet/withdraw endpoint
     - Validate minimum diamond balance (1000 diamonds)
     - Calculate real credit amount using conversion rate
@@ -304,7 +304,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
 
 
-  - [ ] 10.4 Implement agency system
+  - [x] 10.4 Implement agency system
     - Create POST /api/admin/agents/register endpoint
     - Store agent profile with commission rate
     - Create PUT /api/admin/hosts/:hostId/assign-agent endpoint
