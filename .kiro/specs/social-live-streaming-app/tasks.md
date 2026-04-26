@@ -259,13 +259,13 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Create POST /api/wallet/webhook/paypal endpoint
     - _Requirements: 17.1, 17.3, 17.4_
   
-  - [ ] 9.4 Integrate Mada and stc pay gateways
+  - [x] 9.4 Integrate Mada and stc pay gateways
     - Implement MadaGateway class with provider API
     - Implement StcPayGateway class with provider API
     - Create webhook endpoints for both gateways
     - _Requirements: 17.1, 17.3, 17.4_
   
-  - [ ] 9.5 Implement coin purchase flow
+  - [x] 9.5 Implement coin purchase flow
     - Create POST /api/wallet/purchase-coins endpoint
     - Define coin packages with prices
     - Create payment session with selected gateway

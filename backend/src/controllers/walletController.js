@@ -335,3 +335,97 @@ exports.handlePayPalWebhook = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Handle Mada webhook
+ * POST /api/wallet/webhook/mada
+ */
+exports.handleMadaWebhook = async (req, res, next) => {
+  try {
+    const signature = req.headers['mada-signature'];
+    
+    if (!signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Missing mada-signature header',
+      });
+    }
+
+    // Process webhook
+    const result = await paymentService.handleWebhook('mada', req.body, signature);
+
+    logger.info('Mada webhook processed', { result });
+
+    res.json({
+      success: true,
+      received: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Failed to handle Mada webhook', { error: error.message });
+    
+    // Return 400 for webhook verification failures
+    if (error.message.includes('verification') || error.message.includes('signature')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Webhook verification failed',
+      });
+    }
+
+    // Return 200 for other errors to prevent retries
+    res.status(200).json({
+      success: false,
+      received: true,
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Handle stc pay webhook
+ * POST /api/wallet/webhook/stcpay
+ */
+exports.handleStcPayWebhook = async (req, res, next) => {
+  try {
+    const signature = req.headers['stcpay-signature'];
+    
+    if (!signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Missing stcpay-signature header',
+      });
+    }
+
+    // Process webhook
+    const result = await paymentService.handleWebhook('stcpay', req.body, signature);
+
+    logger.info('stc pay webhook processed', { result });
+
+    res.json({
+      success: true,
+      received: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Failed to handle stc pay webhook', { error: error.message });
+    
+    // Return 400 for webhook verification failures
+    if (error.message.includes('verification') || error.message.includes('signature')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Webhook verification failed',
+      });
+    }
+
+    // Return 200 for other errors to prevent retries
+    res.status(200).json({
+      success: false,
+      received: true,
+      error: error.message,
+    });
+  }
+};
