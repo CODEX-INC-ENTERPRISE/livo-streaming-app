@@ -153,4 +153,185 @@ exports.getBalance = async (req, res, next) => {
   }
 };
 
-module.exports = exports;
+const paymentService = require('../services/paymentService');
+
+/**
+ * Get available coin packages
+ * GET /api/wallet/packages
+ */
+exports.getCoinPackages = async (req, res, next) => {
+  try {
+    const packages = paymentService.getCoinPackages();
+
+    res.json({
+      success: true,
+      data: {
+        packages,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to get coin packages', { error: error.message });
+    next(error);
+  }
+};
+
+/**
+ * Purchase coins
+ * POST /api/wallet/purchase-coins
+ * Body: { packageId, gateway, currency }
+ */
+exports.purchaseCoins = async (req, res, next) => {
+  try {
+    const { packageId, gateway = 'stripe', currency = 'USD' } = req.body;
+    const userId = req.userId;
+
+    // Validate required fields
+    if (!packageId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Package ID is required',
+      });
+    }
+
+    // Validate gateway
+    const validGateways = ['stripe', 'paypal', 'mada', 'stcpay'];
+    if (!validGateways.includes(gateway)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Invalid payment gateway',
+      });
+    }
+
+    // Get IP address and device info for fraud detection
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const deviceId = req.headers['x-device-id'] || null;
+
+    // Create payment session
+    const session = await paymentService.createPaymentSession(userId, packageId, gateway, {
+      currency,
+      ipAddress,
+      deviceId,
+      successUrl: `${process.env.APP_URL || 'http://localhost:3000'}/payment/success`,
+      cancelUrl: `${process.env.APP_URL || 'http://localhost:3000'}/payment/cancel`,
+    });
+
+    logger.info('Coin purchase initiated', { userId, packageId, gateway, sessionId: session.sessionId });
+
+    res.json({
+      success: true,
+      data: {
+        sessionId: session.sessionId,
+        paymentUrl: session.paymentUrl,
+        gateway: session.gateway,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to purchase coins', { userId: req.userId, error: error.message });
+    
+    if (error.message.includes('security reasons')) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Payment blocked for security reasons. Please contact support.',
+      });
+    }
+
+    next(error);
+  }
+};
+
+/**
+ * Handle Stripe webhook
+ * POST /api/wallet/webhook/stripe
+ */
+exports.handleStripeWebhook = async (req, res, next) => {
+  try {
+    const signature = req.headers['stripe-signature'];
+    
+    if (!signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Missing stripe-signature header',
+      });
+    }
+
+    // Process webhook
+    const result = await paymentService.handleWebhook('stripe', req.body, signature);
+
+    logger.info('Stripe webhook processed', { result });
+
+    res.json({
+      success: true,
+      received: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Failed to handle Stripe webhook', { error: error.message });
+    
+    // Return 400 for webhook verification failures
+    if (error.message.includes('verification') || error.message.includes('signature')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Webhook verification failed',
+      });
+    }
+
+    // Return 200 for other errors to prevent retries
+    res.status(200).json({
+      success: false,
+      received: true,
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Handle PayPal webhook
+ * POST /api/wallet/webhook/paypal
+ */
+exports.handlePayPalWebhook = async (req, res, next) => {
+  try {
+    const signature = req.headers['paypal-signature'];
+    
+    if (!signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Missing paypal-signature header',
+      });
+    }
+
+    // Process webhook
+    const result = await paymentService.handleWebhook('paypal', req.body, signature);
+
+    logger.info('PayPal webhook processed', { result });
+
+    res.json({
+      success: true,
+      received: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('Failed to handle PayPal webhook', { error: error.message });
+    
+    // Return 400 for webhook verification failures
+    if (error.message.includes('verification') || error.message.includes('signature')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'Webhook verification failed',
+      });
+    }
+
+    // Return 200 for other errors to prevent retries
+    res.status(200).json({
+      success: false,
+      received: true,
+      error: error.message,
+    });
+  }
+};
