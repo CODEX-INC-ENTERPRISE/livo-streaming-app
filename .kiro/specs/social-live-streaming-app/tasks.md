@@ -234,8 +234,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 14.3_
 
 
-- [ ] 9. Backend: Payment gateway integration
-  - [ ] 9.1 Implement payment service abstraction
+- [x] 9. Backend: Payment gateway integration
+  - [x] 9.1 Implement payment service abstraction
     - Create PaymentService class with gateway abstraction
     - Define common interface for all payment gateways
     - Implement payment session creation
@@ -243,7 +243,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement fraud detection checks
     - _Requirements: 17.1, 17.5, 32.4_
   
-  - [ ] 9.2 Integrate Stripe payment gateway
+  - [x] 9.2 Integrate Stripe payment gateway
     - Install Stripe SDK
     - Implement StripeGateway class
     - Create checkout session creation
@@ -251,7 +251,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Create POST /api/wallet/webhook/stripe endpoint
     - _Requirements: 17.1, 17.3, 17.4, 32.3_
   
-  - [ ] 9.3 Integrate PayPal payment gateway
+  - [x] 9.3 Integrate PayPal payment gateway
     - Install PayPal SDK
     - Implement PayPalGateway class
     - Create payment order creation
