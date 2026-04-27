@@ -2,6 +2,7 @@ const Stream = require('../models/Stream');
 const User = require('../models/User');
 const ChatMessage = require('../models/ChatMessage');
 const agoraService = require('../services/agoraService');
+const notificationService = require('../services/notificationService');
 const logger = require('../utils/logger');
 
 /**
@@ -66,6 +67,40 @@ exports.startStream = async (req, res, next) => {
       hostId,
       agoraChannelId,
     });
+
+    // Trigger notification to all followers (within 2 seconds requirement)
+    try {
+      const host = await User.findById(hostId).select('followerIds displayName');
+      if (host && host.followerIds.length > 0) {
+        const notification = {
+          type: 'stream_start',
+          title: `${host.displayName} started streaming`,
+          message: `Watch ${host.displayName}'s live stream: ${title}`,
+          data: {
+            streamId: stream._id,
+            hostId: host._id,
+            hostName: host.displayName,
+            title,
+          },
+        };
+        
+        // Send notification to all followers
+        await notificationService.sendBulkNotification(host.followerIds, notification);
+        
+        logger.info('Stream start notification sent to followers', {
+          streamId: stream._id,
+          hostId,
+          followerCount: host.followerIds.length,
+        });
+      }
+    } catch (notificationError) {
+      logger.warn('Failed to send stream start notification', {
+        error: notificationError.message,
+        streamId: stream._id,
+        hostId,
+      });
+      // Continue even if notification fails
+    }
 
     res.status(201).json({
       streamId: stream._id,
@@ -333,6 +368,39 @@ exports.sendChatMessage = async (req, res, next) => {
         timestamp: chatMessage.timestamp,
         isPinned: false,
       });
+    }
+
+    // Send notification to host about new message (if sender is not host)
+    if (senderId !== stream.hostId.toString()) {
+      try {
+        const notification = {
+          type: 'new_message',
+          title: 'New Message',
+          message: `${sender.displayName}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`,
+          data: {
+            streamId,
+            senderId,
+            senderName: sender.displayName,
+            messageId: chatMessage._id,
+          },
+        };
+        
+        await notificationService.sendNotification(stream.hostId, notification);
+        
+        logger.info('Message notification sent to host', {
+          streamId,
+          senderId,
+          hostId: stream.hostId,
+          messageId: chatMessage._id,
+        });
+      } catch (notificationError) {
+        logger.warn('Failed to send message notification', {
+          error: notificationError.message,
+          streamId,
+          hostId: stream.hostId,
+        });
+        // Continue even if notification fails
+      }
     }
 
     logger.info('Chat message sent', { streamId, senderId, messageId: chatMessage._id });

@@ -3,6 +3,8 @@ const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const Stream = require('../models/Stream');
 const User = require('../models/User');
+const Host = require('../models/Host');
+const notificationService = require('../services/notificationService');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 
@@ -286,9 +288,11 @@ exports.sendGift = async (req, res, next) => {
         diamondValue: gift.diamondValue,
         timestamp: new Date(),
       });
+    }
 
-      // Send notification to host
-      io.to(`user:${hostId}`).emit('notification:new', {
+    // Send notification to host about gift received
+    try {
+      const notification = {
         type: 'gift_received',
         title: 'Gift Received!',
         message: `${sender?.displayName} sent you ${gift.name}`,
@@ -299,8 +303,23 @@ exports.sendGift = async (req, res, next) => {
           giftName: gift.name,
           diamondValue: gift.diamondValue,
         },
-        timestamp: new Date(),
+      };
+      
+      await notificationService.sendNotification(hostId, notification);
+      
+      logger.info('Gift notification sent to host', {
+        streamId,
+        senderId,
+        hostId,
+        giftId: gift._id,
       });
+    } catch (notificationError) {
+      logger.warn('Failed to send gift notification', {
+        error: notificationError.message,
+        streamId,
+        hostId,
+      });
+      // Continue even if notification fails
     }
 
     logger.info('Gift sent successfully', {

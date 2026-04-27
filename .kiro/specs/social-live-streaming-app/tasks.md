@@ -354,8 +354,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Broadcast message via WebSocket within 500ms
     - _Requirements: 13.1, 13.2, 13.3_
 
-- [ ] 12. Backend: Notification system
-  - [ ] 12.1 Implement notification service
+- [x] 12. Backend: Notification system
+  - [x] 12.1 Implement notification service
     - Initialize Firebase Cloud Messaging (FCM)
     - Create NotificationService class
     - Implement sendNotification method with FCM
@@ -364,7 +364,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle FCM token registration
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.6, 27.7_
   
-  - [ ] 12.2 Implement notification triggers
+  - [x] 12.2 Implement notification triggers
     - Trigger notification on stream start to all followers
     - Trigger notification on gift received
     - Trigger notification on new follower
@@ -372,7 +372,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Ensure delivery within 2 seconds
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.7_
   
-  - [ ] 12.3 Implement notification endpoints
+  - [x] 12.3 Implement notification endpoints
     - Create GET /api/notifications/:userId endpoint with pagination
     - Create PUT /api/notifications/:notificationId/read endpoint
     - Create PUT /api/users/:userId/notification-preferences endpoint
