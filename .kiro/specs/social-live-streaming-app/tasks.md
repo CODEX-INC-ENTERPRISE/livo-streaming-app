@@ -315,8 +315,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Return commission reports with per-host breakdown
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 20.1, 20.2, 20.3, 20.4_
 
-- [ ] 11. Backend: Voice room implementation
-  - [ ] 11.1 Implement voice room creation
+- [x] 11. Backend: Voice room implementation
+  - [x] 11.1 Implement voice room creation
     - Create POST /api/voice-rooms/create endpoint
     - Allocate Agora audio channel
     - Create voice room document with host and settings
@@ -324,7 +324,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Return room ID and audio token
     - _Requirements: 11.1, 11.2, 11.3_
   
-  - [ ] 11.2 Implement voice room participation
+  - [x] 11.2 Implement voice room participation
     - Create POST /api/voice-rooms/:roomId/join endpoint
     - Add user as listener by default
     - Generate Agora audio token
@@ -334,7 +334,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Broadcast participant left event
     - _Requirements: 11.4, 11.5, 12.3_
   
-  - [ ] 11.3 Implement voice room controls
+  - [x] 11.3 Implement voice room controls
     - Create POST /api/voice-rooms/:roomId/raise-hand endpoint
     - Update participant isHandRaised flag
     - Broadcast hand raise event to host
@@ -347,7 +347,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Broadcast role change event
     - _Requirements: 12.4, 12.5, 12.6_
   
-  - [ ] 11.4 Implement voice room chat
+  - [x] 11.4 Implement voice room chat
     - Create POST /api/voice-rooms/:roomId/chat endpoint
     - Validate message length (max 500 characters)
     - Store message in chatMessages collection

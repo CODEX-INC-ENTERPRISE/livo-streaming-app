@@ -6,6 +6,7 @@ const streamRoutes = require('./streams');
 const giftRoutes = require('./gifts');
 const walletRoutes = require('./wallet');
 const hostRoutes = require('./hosts');
+const voiceRoomRoutes = require('./voiceRooms');
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use('/api/gifts', giftRoutes);
 router.use('/api', giftRoutes); // For /api/admin/gifts endpoint
 router.use('/api/wallet', walletRoutes);
 router.use('/api', hostRoutes); // For /api/hosts and /api/admin endpoints
+router.use('/api/voice-rooms', voiceRoomRoutes);
 
 module.exports = router;
