@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const { getRedisClient } = require('../config/redis');
 const logger = require('../utils/logger');
+const circuitBreakerService = require('../services/circuitBreakerService');
+const featureFlags = require('../utils/featureFlags');
+const { getResilienceHealthStatus } = require('../utils/resilience');
 
 const checkDatabase = async () => {
   try {
@@ -58,6 +61,15 @@ const healthCheck = async (req, res) => {
       checkRedis(),
     ]);
 
+    // Get circuit breaker health status
+    const circuitBreakers = circuitBreakerService.getHealthStatus();
+    
+    // Get feature flags health status
+    const featureFlagsHealth = featureFlags.getHealthStatus();
+    
+    // Get resilience health status
+    const resilienceHealth = getResilienceHealthStatus();
+
     const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -65,10 +77,16 @@ const healthCheck = async (req, res) => {
       checks: {
         database,
         redis,
+        circuitBreakers,
+        featureFlags: featureFlagsHealth,
+        resilience: resilienceHealth,
       },
     };
 
-    const isHealthy = database.status === 'up' && redis.status === 'up';
+    const isHealthy = database.status === 'up' && 
+                     redis.status === 'up' && 
+                     circuitBreakers.healthy &&
+                     featureFlagsHealth.criticalFeaturesEnabled;
     
     if (!isHealthy) {
       health.status = 'unhealthy';

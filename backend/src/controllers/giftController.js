@@ -7,6 +7,7 @@ const Host = require('../models/Host');
 const notificationService = require('../services/notificationService');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
+const cacheService = require('../services/cacheService');
 
 /**
  * Create a new virtual gift (Admin only)
@@ -65,6 +66,9 @@ exports.createGift = async (req, res, next) => {
       coinPrice: gift.coinPrice,
     });
 
+    // Invalidate virtual gifts cache when a new gift is created
+    await cacheService.invalidateVirtualGifts();
+
     res.status(201).json({
       success: true,
       gift,
@@ -83,36 +87,42 @@ exports.getGifts = async (req, res, next) => {
   try {
     const { category, isActive = 'true' } = req.query;
 
-    // Build query
-    const query = {};
-    
-    if (category) {
-      query.category = category;
-    }
-
-    // Only show active gifts by default
-    if (isActive === 'true') {
-      query.isActive = true;
-    }
-
-    const gifts = await VirtualGift.find(query)
-      .sort({ coinPrice: 1, name: 1 })
-      .lean();
-
-    // Group by category for easier frontend consumption
-    const giftsByCategory = gifts.reduce((acc, gift) => {
-      if (!acc[gift.category]) {
-        acc[gift.category] = [];
+    // Use cache service to get virtual gifts with 1 hour TTL
+    const cacheKey = `category:${category || 'all'}:active:${isActive}`;
+    const result = await cacheService.getVirtualGifts(async () => {
+      // Build query
+      const query = {};
+      
+      if (category) {
+        query.category = category;
       }
-      acc[gift.category].push(gift);
-      return acc;
-    }, {});
 
-    res.json({
-      gifts,
-      giftsByCategory,
-      total: gifts.length,
+      // Only show active gifts by default
+      if (isActive === 'true') {
+        query.isActive = true;
+      }
+
+      const gifts = await VirtualGift.find(query)
+        .sort({ coinPrice: 1, name: 1 })
+        .lean();
+
+      // Group by category for easier frontend consumption
+      const giftsByCategory = gifts.reduce((acc, gift) => {
+        if (!acc[gift.category]) {
+          acc[gift.category] = [];
+        }
+        acc[gift.category].push(gift);
+        return acc;
+      }, {});
+
+      return {
+        gifts,
+        giftsByCategory,
+        total: gifts.length,
+      };
     });
+
+    res.json(result);
   } catch (error) {
     logger.error('Error fetching gifts', { error: error.message });
     next(error);

@@ -1,5 +1,6 @@
 const BaseGateway = require('./BaseGateway');
 const logger = require('../../utils/logger');
+const circuitBreakerService = require('../circuitBreakerService');
 
 /**
  * PayPal Payment Gateway Implementation
@@ -26,6 +27,13 @@ class PayPalGateway extends BaseGateway {
     this.tokenExpiry = null;
     
     logger.info('PayPal gateway initialized', { environment: this.environment });
+    
+    // Register with circuit breaker
+    circuitBreakerService.registerService('paypal', this, {
+      failureThreshold: 5,
+      timeout: 30000, // 30 seconds
+      halfOpenSuccessThreshold: 3
+    });
   }
 
   /**
@@ -311,6 +319,34 @@ class PayPalGateway extends BaseGateway {
       logger.error('Failed to create PayPal refund', { paymentId, error: error.message });
       throw error;
     }
+  }
+
+  /**
+   * Create session with circuit breaker protection
+   * @param {Object} options - Payment options
+   * @returns {Promise<Object>} Session with id and url
+   */
+  async createSessionProtected(options) {
+    return circuitBreakerService.call('paypal', 'createSession', options);
+  }
+
+  /**
+   * Get payment details with circuit breaker protection
+   * @param {String} paymentId - Payment ID
+   * @returns {Promise<Object>} Payment details
+   */
+  async getPaymentDetailsProtected(paymentId) {
+    return circuitBreakerService.call('paypal', 'getPaymentDetails', paymentId);
+  }
+
+  /**
+   * Refund payment with circuit breaker protection
+   * @param {String} paymentId - Payment intent ID
+   * @param {Number} amount - Amount to refund (optional)
+   * @returns {Promise<Object>} Refund details
+   */
+  async refundPaymentProtected(paymentId, amount) {
+    return circuitBreakerService.call('paypal', 'refundPayment', paymentId, amount);
   }
 }
 

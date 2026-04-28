@@ -3,7 +3,9 @@ const User = require('../models/User');
 const ChatMessage = require('../models/ChatMessage');
 const agoraService = require('../services/agoraService');
 const notificationService = require('../services/notificationService');
+const streamMetricsService = require('../services/streamMetricsService');
 const logger = require('../utils/logger');
+const cacheService = require('../services/cacheService');
 
 /**
  * Start a new live stream
@@ -47,9 +49,9 @@ exports.startStream = async (req, res, next) => {
       });
     }
 
-    // Generate Agora channel ID and token
+    // Generate Agora channel ID and token with circuit breaker protection
     const agoraChannelId = agoraService.generateChannelId(hostId);
-    const agoraToken = agoraService.generateHostToken(agoraChannelId, 0);
+    const agoraToken = await agoraService.generateHostTokenProtected(agoraChannelId, 0);
 
     // Create stream document
     const stream = new Stream({
@@ -67,6 +69,9 @@ exports.startStream = async (req, res, next) => {
       hostId,
       agoraChannelId,
     });
+
+    // Update stream metrics
+    await streamMetricsService.onStreamStart(stream._id);
 
     // Trigger notification to all followers (within 2 seconds requirement)
     try {
@@ -101,6 +106,9 @@ exports.startStream = async (req, res, next) => {
       });
       // Continue even if notification fails
     }
+
+    // Invalidate stream list cache when a new stream starts
+    await cacheService.invalidateStreamList('active:*');
 
     res.status(201).json({
       streamId: stream._id,
@@ -142,6 +150,9 @@ exports.endStream = async (req, res, next) => {
     stream.endedAt = new Date();
     await stream.save();
 
+    // Update stream metrics
+    await streamMetricsService.onStreamEnd(stream._id);
+
     // Broadcast 'stream:ended' event to all viewers via WebSocket
     const io = req.app.get('io');
     if (io) {
@@ -160,6 +171,9 @@ exports.endStream = async (req, res, next) => {
 
     logger.info('Stream ended', { streamId, hostId, statistics });
 
+    // Invalidate stream list cache when a stream ends
+    await cacheService.invalidateStreamList('active:*');
+
     res.json({ success: true, statistics });
   } catch (error) {
     logger.error('Error ending stream', { error: error.message });
@@ -177,27 +191,33 @@ exports.getActiveStreams = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const streams = await Stream.find({ status: 'active' })
-      .populate('hostId', 'displayName profilePictureUrl')
-      .sort({ startedAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Use cache service to get stream list with 10 second TTL
+    const cacheKey = `active:page${page}:limit${limit}`;
+    const result = await cacheService.getStreamList(cacheKey, async () => {
+      const streams = await Stream.find({ status: 'active' })
+        .populate('hostId', 'displayName profilePictureUrl')
+        .sort({ startedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
 
-    const total = await Stream.countDocuments({ status: 'active' });
+      const total = await Stream.countDocuments({ status: 'active' });
 
-    // Add viewer count to each stream
-    const streamsWithViewerCount = streams.map((stream) => ({
-      ...stream,
-      viewerCount: stream.currentViewerIds.length,
-    }));
+      // Add viewer count to each stream
+      const streamsWithViewerCount = streams.map((stream) => ({
+        ...stream,
+        viewerCount: stream.currentViewerIds.length,
+      }));
 
-    res.json({
-      streams: streamsWithViewerCount,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      return {
+        streams: streamsWithViewerCount,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
     });
+
+    res.json(result);
   } catch (error) {
     logger.error('Error fetching active streams', { error: error.message });
     next(error);
@@ -243,10 +263,13 @@ exports.joinStream = async (req, res, next) => {
       }
 
       await stream.save();
+      
+      // Update stream metrics
+      await streamMetricsService.onViewerJoin(streamId);
     }
 
-    // Generate Agora viewer token
-    const agoraToken = agoraService.generateViewerToken(stream.agoraChannelId, 0);
+    // Generate Agora viewer token with circuit breaker protection
+    const agoraToken = await agoraService.generateViewerTokenProtected(stream.agoraChannelId, 0);
 
     // Broadcast viewer joined event
     const io = req.app.get('io');
@@ -292,6 +315,9 @@ exports.leaveStream = async (req, res, next) => {
     );
 
     await stream.save();
+
+    // Update stream metrics
+    await streamMetricsService.onViewerLeave(streamId);
 
     // Broadcast viewer left event
     const io = req.app.get('io');

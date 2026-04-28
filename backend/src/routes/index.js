@@ -9,6 +9,7 @@ const hostRoutes = require('./hosts');
 const voiceRoomRoutes = require('./voiceRooms');
 const notificationRoutes = require('./notifications');
 const adminRoutes = require('./admin');
+const uploadRoutes = require('./uploads');
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use('/api', hostRoutes); // For /api/hosts and /api/admin endpoints
 router.use('/api/voice-rooms', voiceRoomRoutes);
 router.use('/api', notificationRoutes);
 router.use('/api', adminRoutes); // For /api/admin endpoints
+router.use('/api/uploads', uploadRoutes);
 
 module.exports = router;

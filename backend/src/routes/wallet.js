@@ -34,13 +34,15 @@ router.get('/:userId/balance', authenticate, walletController.getBalance);
 router.get('/transactions/:userId', authenticate, walletController.getTransactions);
 
 // Purchase coins endpoint
-router.post('/purchase-coins', authenticate, validateRequest(purchaseCoinsSchema), walletController.purchaseCoins);
+const { getPaymentRateLimiter } = require('../middleware/rateLimit');
+const paymentRateLimiter = getPaymentRateLimiter();
+router.post('/purchase-coins', authenticate, paymentRateLimiter, validateRequest(purchaseCoinsSchema), walletController.purchaseCoins);
 
 // Get available coin packages
 router.get('/packages', walletController.getCoinPackages);
 
 // Withdrawal endpoints
-router.post('/withdraw', authenticate, validateRequest(createWithdrawalSchema), walletController.createWithdrawal);
+router.post('/withdraw', authenticate, paymentRateLimiter, validateRequest(createWithdrawalSchema), walletController.createWithdrawal);
 router.get('/withdrawals/:userId', authenticate, walletController.getWithdrawals);
 router.get('/withdrawals/:userId/:withdrawalId', authenticate, walletController.getWithdrawalById);
 

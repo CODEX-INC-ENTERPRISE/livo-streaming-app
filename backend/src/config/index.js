@@ -44,6 +44,15 @@ const configSchema = Joi.object({
   COMMISSION_RATE: Joi.number().min(0).max(1).default(0.15),
   DIAMOND_TO_CREDIT_RATE: Joi.number().min(0).default(0.01),
   MIN_WITHDRAWAL_DIAMONDS: Joi.number().min(0).default(1000),
+  
+  RATE_LIMIT_AUTH_WINDOW_MS: Joi.number().default(15 * 60 * 1000),
+  RATE_LIMIT_AUTH_MAX: Joi.number().default(5),
+  RATE_LIMIT_API_WINDOW_MS: Joi.number().default(60 * 1000),
+  RATE_LIMIT_API_MAX: Joi.number().default(100),
+  RATE_LIMIT_CHAT_WINDOW_MS: Joi.number().default(1000),
+  RATE_LIMIT_CHAT_MAX: Joi.number().default(5),
+  RATE_LIMIT_PAYMENT_WINDOW_MS: Joi.number().default(60 * 60 * 1000),
+  RATE_LIMIT_PAYMENT_MAX: Joi.number().default(10),
 }).unknown();
 
 const { value: envVars, error } = configSchema.validate(process.env);
@@ -112,5 +121,24 @@ module.exports = {
     commissionRate: envVars.COMMISSION_RATE,
     diamondToCreditRate: envVars.DIAMOND_TO_CREDIT_RATE,
     minWithdrawalDiamonds: envVars.MIN_WITHDRAWAL_DIAMONDS,
+  },
+  
+  rateLimit: {
+    auth: {
+      windowMs: envVars.RATE_LIMIT_AUTH_WINDOW_MS,
+      max: envVars.RATE_LIMIT_AUTH_MAX,
+    },
+    api: {
+      windowMs: envVars.RATE_LIMIT_API_WINDOW_MS,
+      max: envVars.RATE_LIMIT_API_MAX,
+    },
+    chat: {
+      windowMs: envVars.RATE_LIMIT_CHAT_WINDOW_MS,
+      max: envVars.RATE_LIMIT_CHAT_MAX,
+    },
+    payment: {
+      windowMs: envVars.RATE_LIMIT_PAYMENT_WINDOW_MS,
+      max: envVars.RATE_LIMIT_PAYMENT_MAX,
+    },
   },
 };

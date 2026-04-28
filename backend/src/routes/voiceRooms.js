@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const voiceRoomController = require('../controllers/voiceRoomController');
 const { authenticate } = require('../middleware/auth');
+const { validateRequest, validateQuery } = require('../middleware/validation');
+const { 
+  createVoiceRoomSchema, 
+  promoteDemoteSchema, 
+  voiceRoomChatSchema,
+  paginationSchema 
+} = require('../middleware/validationSchemas');
 
 // Apply authentication middleware to all routes
 router.use(authenticate);
@@ -66,7 +73,7 @@ router.use(authenticate);
  *       401:
  *         description: Unauthorized
  */
-router.post('/create', voiceRoomController.createVoiceRoom);
+router.post('/create', validateRequest(createVoiceRoomSchema), voiceRoomController.createVoiceRoom);
 
 /**
  * @swagger
@@ -229,7 +236,7 @@ router.post('/:roomId/raise-hand', voiceRoomController.raiseHand);
  *       404:
  *         description: Voice room or user not found
  */
-router.post('/:roomId/promote', voiceRoomController.promoteToSpeaker);
+router.post('/:roomId/promote', validateRequest(promoteDemoteSchema), voiceRoomController.promoteToSpeaker);
 
 /**
  * @swagger
@@ -279,7 +286,7 @@ router.post('/:roomId/promote', voiceRoomController.promoteToSpeaker);
  *       404:
  *         description: Voice room or user not found
  */
-router.post('/:roomId/demote', voiceRoomController.demoteToListener);
+router.post('/:roomId/demote', validateRequest(promoteDemoteSchema), voiceRoomController.demoteToListener);
 
 /**
  * @swagger
@@ -329,8 +336,12 @@ router.post('/:roomId/demote', voiceRoomController.demoteToListener);
  *         description: Not in the voice room
  *       404:
  *         description: Voice room not found
+ *       429:
+ *         description: Rate limit exceeded
  */
-router.post('/:roomId/chat', voiceRoomController.sendVoiceRoomChat);
+const { getChatRateLimiter } = require('../middleware/rateLimit');
+const chatRateLimiter = getChatRateLimiter();
+router.post('/:roomId/chat', chatRateLimiter, validateRequest(voiceRoomChatSchema), voiceRoomController.sendVoiceRoomChat);
 
 /**
  * @swagger
@@ -424,6 +435,6 @@ router.get('/:roomId', voiceRoomController.getVoiceRoom);
  *       401:
  *         description: Unauthorized
  */
-router.get('/active', voiceRoomController.getActiveVoiceRooms);
+router.get('/active', validateQuery(paginationSchema), voiceRoomController.getActiveVoiceRooms);
 
 module.exports = router;

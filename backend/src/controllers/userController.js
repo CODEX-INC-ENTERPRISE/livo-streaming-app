@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Report = require('../models/Report');
 const logger = require('../utils/logger');
 const notificationService = require('../services/notificationService');
+const cacheService = require('../services/cacheService');
 
 class ValidationError extends Error {
   constructor(message) {
@@ -23,26 +24,29 @@ const getProfile = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).select('-passwordHash');
+    // Use cache service to get user profile with 5 minute TTL
+    const publicProfile = await cacheService.getUserProfile(userId, async () => {
+      const user = await User.findById(userId).select('-passwordHash');
 
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
 
-    if (user.isBlocked) {
-      throw new ValidationError('User account is blocked');
-    }
+      if (user.isBlocked) {
+        throw new ValidationError('User account is blocked');
+      }
 
-    const publicProfile = {
-      id: user._id,
-      displayName: user.displayName,
-      bio: user.bio,
-      profilePictureUrl: user.profilePictureUrl,
-      isHost: user.isHost,
-      followerCount: user.followerIds.length,
-      followingCount: user.followingIds.length,
-      registeredAt: user.registeredAt,
-    };
+      return {
+        id: user._id,
+        displayName: user.displayName,
+        bio: user.bio,
+        profilePictureUrl: user.profilePictureUrl,
+        isHost: user.isHost,
+        followerCount: user.followerIds.length,
+        followingCount: user.followingIds.length,
+        registeredAt: user.registeredAt,
+      };
+    });
 
     res.json({ user: publicProfile });
   } catch (error) {
@@ -98,6 +102,9 @@ const updateProfile = async (req, res, next) => {
     }
 
     await user.save();
+
+    // Invalidate user profile cache after update
+    await cacheService.invalidateUserProfile(userId);
 
     res.json({ user });
   } catch (error) {

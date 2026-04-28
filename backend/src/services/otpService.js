@@ -2,12 +2,26 @@ const { getRedisClient } = require('../config/redis');
 const nodemailer = require('nodemailer');
 const config = require('../config');
 const logger = require('../utils/logger');
+const circuitBreakerService = require('./circuitBreakerService');
 
 class OTPService {
   constructor() {
     this.redisClient = null;
     this.emailTransporter = null;
     this.initializeEmailTransporter();
+    
+    // Register with circuit breaker for email and SMS services
+    circuitBreakerService.registerService('email', this, {
+      failureThreshold: 3,
+      timeout: 60000, // 1 minute
+      halfOpenSuccessThreshold: 2
+    });
+    
+    circuitBreakerService.registerService('sms', this, {
+      failureThreshold: 3,
+      timeout: 60000, // 1 minute
+      halfOpenSuccessThreshold: 2
+    });
   }
 
   initializeEmailTransporter() {
@@ -124,6 +138,16 @@ class OTPService {
     }
   }
 
+  /**
+   * Send email OTP with circuit breaker protection
+   * @param {string} email - Email address
+   * @param {string} otp - OTP code
+   * @returns {Promise<Object>} - Result
+   */
+  async sendEmailOTPProtected(email, otp) {
+    return circuitBreakerService.call('email', 'sendEmailOTP', email, otp);
+  }
+
   async sendSMSOTP(phoneNumber, otp) {
     if (!config.sms.gatewayUrl || !config.sms.apiKey) {
       logger.warn('SMS gateway not configured, logging OTP instead');
@@ -160,6 +184,16 @@ class OTPService {
     }
   }
 
+  /**
+   * Send SMS OTP with circuit breaker protection
+   * @param {string} phoneNumber - Phone number
+   * @param {string} otp - OTP code
+   * @returns {Promise<Object>} - Result
+   */
+  async sendSMSOTPProtected(phoneNumber, otp) {
+    return circuitBreakerService.call('sms', 'sendSMSOTP', phoneNumber, otp);
+  }
+
   async sendOTP(type, identifier) {
     await this.checkRateLimit(identifier);
     
@@ -168,9 +202,9 @@ class OTPService {
     await this.storeOTP(identifier, otp);
     
     if (type === 'email') {
-      await this.sendEmailOTP(identifier, otp);
+      await this.sendEmailOTPProtected(identifier, otp);
     } else if (type === 'phone') {
-      await this.sendSMSOTP(identifier, otp);
+      await this.sendSMSOTPProtected(identifier, otp);
     } else {
       throw new Error('Invalid OTP type');
     }

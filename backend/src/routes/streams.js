@@ -63,9 +63,12 @@ router.post(
 );
 
 // Stream chat endpoints
+const { getChatRateLimiter } = require('../middleware/rateLimit');
+const chatRateLimiter = getChatRateLimiter();
 router.post(
   '/:streamId/chat',
   authenticate,
+  chatRateLimiter,
   validateRequest(chatMessageSchema),
   streamController.sendChatMessage
 );

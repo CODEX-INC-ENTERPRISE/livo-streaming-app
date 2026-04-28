@@ -3,6 +3,8 @@ const { sendNotificationToUser, sendNotificationToUsers } = require('../socket/h
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const admin = require('firebase-admin');
+const featureFlags = require('../utils/featureFlags');
+const { retryWithBackoff, defaultRetryFilter } = require('../utils/retry');
 
 class NotificationService {
   constructor() {
@@ -65,18 +67,23 @@ class NotificationService {
         // Continue even if socket notification fails
       }
 
-      // Send push notification via FCM if user has FCM token
+      // Send push notification via FCM if user has FCM token and feature is enabled
       if (user.fcmToken && admin.apps.length > 0) {
-        try {
-          await this.sendFCMNotification(user.fcmToken, notification);
-        } catch (fcmError) {
-          logger.warn('Failed to send FCM notification', {
-            error: fcmError.message,
-            userId,
-            fcmToken: user.fcmToken ? 'present' : 'missing',
-          });
-          // Continue even if FCM notification fails
-        }
+        // Use feature flags for graceful degradation
+        await featureFlags.executeIfEnabled(
+          'PUSH_NOTIFICATIONS',
+          async () => {
+            await this.sendFCMNotification(user.fcmToken, notification);
+          },
+          async () => {
+            // Fallback: log that push notification would have been sent
+            logger.info('Push notification skipped (feature disabled)', {
+              userId,
+              type: notification.type,
+              title: notification.title,
+            });
+          }
+        );
       }
 
       logger.info('Notification sent', {
@@ -216,7 +223,23 @@ class NotificationService {
       },
     };
 
-    const response = await admin.messaging().send(message);
+    // Use retry with exponential backoff for FCM calls
+    const sendMessage = async () => {
+      return await admin.messaging().send(message);
+    };
+
+    const response = await retryWithBackoff(sendMessage, {
+      maxRetries: 3,
+      baseDelay: 1000,
+      maxDelay: 10000,
+      shouldRetry: (error) => {
+        // Retry on network errors and rate limits
+        return defaultRetryFilter(error) || 
+               error.code === 'messaging/unavailable' ||
+               error.code === 'messaging/internal-error';
+      }
+    });
+
     logger.debug('FCM notification sent', {
       messageId: response,
       fcmToken: fcmToken.substring(0, 10) + '...',
