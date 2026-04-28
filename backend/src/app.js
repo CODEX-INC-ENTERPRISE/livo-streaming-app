@@ -28,7 +28,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/', routes);
-app.use('/api', routes);
 
 app.use(notFoundHandler);
 

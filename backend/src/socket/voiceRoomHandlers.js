@@ -211,6 +211,48 @@ const registerVoiceRoomHandlers = (io, socket) => {
         return;
       }
 
+      // Check message for moderation keywords
+      const { checkMessageForKeywords, logModerationViolation } = require('../controllers/adminModerationController');
+      const keywordCheck = await checkMessageForKeywords(message);
+      
+      if (keywordCheck.hasViolation) {
+        const mostSevereViolation = keywordCheck.mostSevereViolation;
+        
+        // Log the violation
+        await logModerationViolation({
+          userId: socket.userId,
+          voiceRoomId: roomId,
+          originalContent: message,
+          violationType: 'keyword_filter',
+          matchedKeyword: mostSevereViolation.keyword,
+          actionTaken: mostSevereViolation.action === 'block' ? 'blocked' : 
+                      mostSevereViolation.action === 'warn' ? 'warned' : 'flagged',
+          severity: mostSevereViolation.severity,
+          automated: true,
+          notes: `Automated moderation: ${mostSevereViolation.action} action for keyword "${mostSevereViolation.keyword}"`,
+        });
+        
+        // Take action based on keyword action
+        if (mostSevereViolation.action === 'block') {
+          // Block the message - don't save or broadcast
+          socket.emit('error', { 
+            message: 'Message blocked due to content violation',
+            code: 'MESSAGE_BLOCKED',
+            severity: mostSevereViolation.severity,
+          });
+          return;
+        } else if (mostSevereViolation.action === 'warn') {
+          // Warn the user but still send the message
+          socket.emit('warning', {
+            message: 'Your message contains content that violates community guidelines',
+            code: 'CONTENT_WARNING',
+            severity: mostSevereViolation.severity,
+          });
+          // Continue to send the message
+        }
+        // For 'flag' action, just log and continue
+      }
+
       // Get user info
       const user = await User.findById(socket.userId).select('displayName profilePictureUrl');
 
@@ -240,6 +282,7 @@ const registerVoiceRoomHandlers = (io, socket) => {
         userId: socket.userId,
         roomId,
         messageId: chatMessage._id,
+        hasViolation: keywordCheck.hasViolation,
       });
     } catch (error) {
       logger.error('Error sending voice room chat message', {

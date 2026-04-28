@@ -69,6 +69,22 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  userStatus: {
+    type: String,
+    enum: ['active', 'warning', 'suspended', 'banned'],
+    default: 'active',
+  },
+  warningCount: {
+    type: Number,
+    default: 0,
+  },
+  suspensionEndDate: {
+    type: Date,
+  },
+  banReason: {
+    type: String,
+    maxlength: 500,
+  },
   followerIds: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

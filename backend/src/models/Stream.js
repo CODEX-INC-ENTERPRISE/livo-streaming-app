@@ -53,12 +53,48 @@ const streamSchema = new mongoose.Schema({
   agoraChannelId: {
     type: String,
   },
+  // Flagging fields for admin review
+  flagged: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  flaggedAt: {
+    type: Date,
+  },
+  flaggedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  flagReason: {
+    type: String,
+    maxlength: 500,
+  },
+  flagNotes: {
+    type: String,
+    maxlength: 1000,
+  },
+  flagStatus: {
+    type: String,
+    enum: ['pending_review', 'reviewed', 'action_taken'],
+    default: 'pending_review',
+  },
+  streamStatusAtFlag: {
+    type: String,
+    enum: ['active', 'ended', 'terminated'],
+  },
+  viewerCountAtFlag: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true,
 });
 
 streamSchema.index({ hostId: 1, startedAt: -1 });
 streamSchema.index({ status: 1, startedAt: -1 });
+streamSchema.index({ flagged: 1, flaggedAt: -1 });
+streamSchema.index({ flagStatus: 1, flaggedAt: -1 });
 
 const Stream = mongoose.model('Stream', streamSchema);
 

@@ -10,6 +10,8 @@ const Notification = require('./Notification');
 const WithdrawalRequest = require('./WithdrawalRequest');
 const Agent = require('./Agent');
 const ChatMessage = require('./ChatMessage');
+const ModerationKeyword = require('./ModerationKeyword');
+const ModerationLog = require('./ModerationLog');
 
 module.exports = {
   User,
@@ -24,4 +26,6 @@ module.exports = {
   WithdrawalRequest,
   Agent,
   ChatMessage,
+  ModerationKeyword,
+  ModerationLog,
 };
