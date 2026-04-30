@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' hide StreamProvider;
 import '../../providers/stream_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/stream.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -161,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  Widget _buildStreamCard(Stream stream) {
+  Widget _buildStreamCard(LiveStream stream) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
@@ -348,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  void _joinStream(Stream stream) async {
+  void _joinStream(LiveStream stream) async {
     try {
       final streamProvider = context.read<StreamProvider>();
       await streamProvider.joinStream(stream.id);

@@ -8,14 +8,14 @@ class StreamProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final SocketService _socketService = SocketService();
   
-  List<Stream> _activeStreams = [];
-  Stream? _currentStream;
+  List<LiveStream> _activeStreams = [];
+  LiveStream? _currentStream;
   bool _isLoading = false;
   String? _error;
   
   // Getters
-  List<Stream> get activeStreams => _activeStreams;
-  Stream? get currentStream => _currentStream;
+  List<LiveStream> get activeStreams => _activeStreams;
+  LiveStream? get currentStream => _currentStream;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isInStream => _currentStream != null;
@@ -71,7 +71,7 @@ class StreamProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         final streamsData = response.data as List<dynamic>;
         _activeStreams = streamsData
-            .map((data) => Stream.fromJson(data as Map<String, dynamic>))
+            .map((data) => LiveStream.fromJson(data as Map<String, dynamic>))
             .toList();
         
         Logger.info('Loaded ${_activeStreams.length} active streams');
@@ -89,7 +89,7 @@ class StreamProvider extends ChangeNotifier {
   }
   
   // Start a new stream
-  Future<Stream> startStream(String title) async {
+  Future<LiveStream> startStream(String title) async {
     try {
       _isLoading = true;
       _error = null;
@@ -102,7 +102,7 @@ class StreamProvider extends ChangeNotifier {
       
       if (response.statusCode == 200 || response.statusCode == 201) {
         final streamData = response.data as Map<String, dynamic>;
-        final stream = Stream.fromJson(streamData);
+        final stream = LiveStream.fromJson(streamData);
         
         // Add to active streams
         _activeStreams.insert(0, stream);
@@ -111,7 +111,7 @@ class StreamProvider extends ChangeNotifier {
         _currentStream = stream;
         
         // Join stream room via socket
-        await _socketService.joinStream(stream.id);
+        _socketService.joinStream(stream.id);
         
         Logger.info('Stream started: ${stream.id}');
         return stream;
@@ -145,7 +145,7 @@ class StreamProvider extends ChangeNotifier {
       
       if (response.statusCode == 200) {
         // Leave stream room via socket
-        await _socketService.leaveStream(_currentStream!.id);
+        _socketService.leaveStream(_currentStream!.id);
         
         // Remove from active streams
         _activeStreams.removeWhere((s) => s.id == _currentStream!.id);
@@ -168,7 +168,7 @@ class StreamProvider extends ChangeNotifier {
   }
   
   // Join a stream as viewer
-  Future<Stream> joinStream(String streamId) async {
+  Future<LiveStream> joinStream(String streamId) async {
     try {
       _isLoading = true;
       _error = null;
@@ -182,13 +182,13 @@ class StreamProvider extends ChangeNotifier {
         // Load stream details
         final streamResponse = await _apiService.get('/streams/$streamId');
         final streamData = streamResponse.data as Map<String, dynamic>;
-        final stream = Stream.fromJson(streamData);
+        final stream = LiveStream.fromJson(streamData);
         
         // Set as current stream
         _currentStream = stream;
         
         // Join stream room via socket
-        await _socketService.joinStream(streamId);
+        _socketService.joinStream(streamId);
         
         Logger.info('Joined stream: $streamId');
         return stream;
@@ -224,7 +224,7 @@ class StreamProvider extends ChangeNotifier {
       
       if (response.statusCode == 200) {
         // Leave stream room via socket
-        await _socketService.leaveStream(streamId);
+        _socketService.leaveStream(streamId);
         
         // Clear current stream
         _currentStream = null;
@@ -250,7 +250,7 @@ class StreamProvider extends ChangeNotifier {
         throw Exception('Not in a stream');
       }
       
-      await _socketService.sendStreamChat(_currentStream!.id, message);
+      _socketService.sendStreamChat(_currentStream!.id, message);
       Logger.debug('Chat message sent');
     } catch (e) {
       Logger.error('Failed to send chat message', e);
@@ -266,7 +266,7 @@ class StreamProvider extends ChangeNotifier {
         throw Exception('Not in a stream');
       }
       
-      await _socketService.sendGift(_currentStream!.id, giftId);
+      _socketService.sendGift(_currentStream!.id, giftId);
       Logger.debug('Gift sent: $giftId');
     } catch (e) {
       Logger.error('Failed to send gift', e);
@@ -388,7 +388,7 @@ class StreamProvider extends ChangeNotifier {
     
     // Update current stream if it matches
     if (_currentStream?.id == streamId) {
-      Stream updatedStream = _currentStream!;
+      LiveStream updatedStream = _currentStream!;
       
       switch (action) {
         case 'mute':

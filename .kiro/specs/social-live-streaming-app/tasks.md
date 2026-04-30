@@ -550,8 +550,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement secure credential storage
     - _Requirements: 2.4_
 
-- [ ] 18. Mobile App: Data models
-  - [ ] 18.1 Create Dart data models
+- [x] 18. Mobile App: Data models
+  - [x] 18.1 Create Dart data models
     - Create User model with fromJson and toJson methods
     - Create Stream model with fromJson and toJson methods
     - Create VoiceRoom model with fromJson and toJson methods
