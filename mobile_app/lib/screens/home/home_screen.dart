@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   
   Future<void> _loadData() async {
-    final streamProvider = context.read<StreamProvider>();
+    final streamProvider = context.read<LiveStreamProvider>();
     await streamProvider.loadActiveStreams();
   }
   
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   @override
   Widget build(BuildContext context) {
-    final streamProvider = context.watch<StreamProvider>();
+    final streamProvider = context.watch<LiveStreamProvider>();
     final authProvider = context.watch<AuthProvider>();
     
     return Scaffold(
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  Widget _buildContent(StreamProvider streamProvider) {
+  Widget _buildContent(LiveStreamProvider streamProvider) {
     if (streamProvider.isLoading && streamProvider.activeStreams.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -331,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context);
                 
                 try {
-                  final streamProvider = context.read<StreamProvider>();
+                  final streamProvider = context.read<LiveStreamProvider>();
                   await streamProvider.startStream(titleController.text.trim());
                   
                   // Navigation to stream screen would happen here
@@ -351,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   void _joinStream(LiveStream stream) async {
     try {
-      final streamProvider = context.read<StreamProvider>();
+      final streamProvider = context.read<LiveStreamProvider>();
       await streamProvider.joinStream(stream.id);
       
       // Navigation to stream view screen would happen here

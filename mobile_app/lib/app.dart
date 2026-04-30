@@ -18,7 +18,7 @@ class SocialLiveStreamingApp extends StatelessWidget {
       providers: [
         provider_package.ChangeNotifierProvider(create: (_) => AuthProvider()),
         provider_package.ChangeNotifierProvider(create: (_) => UserProvider()),
-        provider_package.ChangeNotifierProvider(create: (_) => app_stream_provider.StreamProvider()),
+        provider_package.ChangeNotifierProvider(create: (_) => app_stream_provider.LiveStreamProvider()),
         provider_package.ChangeNotifierProvider(create: (_) => WalletProvider()),
         provider_package.ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],

@@ -142,7 +142,6 @@ class WalletProvider extends ChangeNotifier {
       
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final paymentUrl = data['paymentUrl'] as String?;
         final sessionId = data['sessionId'] as String?;
         
         Logger.info('Coin purchase initiated: $sessionId');

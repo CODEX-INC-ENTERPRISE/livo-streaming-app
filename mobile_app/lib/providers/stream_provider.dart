@@ -4,7 +4,7 @@ import '../core/services/api_service.dart';
 import '../core/services/socket_service.dart';
 import '../core/utils/logger.dart';
 
-class StreamProvider extends ChangeNotifier {
+class LiveStreamProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final SocketService _socketService = SocketService();
   

@@ -1,11 +1,17 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'core/config/env_config.dart';
 import 'core/constants/app_routes.dart';
 import 'core/services/fcm_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/logger.dart';
+import 'providers/auth_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/stream_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/wallet_provider.dart';
 
 void main() async {
   // Must be called before any async work in main().
@@ -45,14 +51,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Livo',
-      debugShowCheckedModeBanner: EnvConfig.showDebugBanner,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
-      initialRoute: AppRoutes.splash,
-      routes: AppRoutes.routes,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => LiveStreamProvider()),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Livo',
+        debugShowCheckedModeBanner: EnvConfig.showDebugBanner,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light,
+        initialRoute: AppRoutes.splash,
+        routes: AppRoutes.routes,
+      ),
     );
   }
 }
