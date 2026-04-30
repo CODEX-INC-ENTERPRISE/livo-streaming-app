@@ -1,0 +1,59 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase credential files — replace placeholders with real files locally,
+# but never commit the real credentials to version control.
+# The placeholder template files (google-services.json, GoogleService-Info.plist)
+# ARE tracked so developers know what structure is expected.
+# To use: copy the real file alongside the placeholder and rename it, or
+# replace the placeholder content with real values locally (and keep it out of git).
+#
+# If you want to track the placeholder but not a real file, use a naming
+# convention like google-services.real.json and add that pattern here instead.
+#
+# Uncomment the lines below once you have replaced the placeholders with real files:
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist

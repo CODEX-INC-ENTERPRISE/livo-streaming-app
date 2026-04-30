@@ -1,0 +1,48 @@
+{
+  "_PLACEHOLDER_": "THIS IS A TEMPLATE FILE - Replace with your real google-services.json from Firebase Console",
+  "_INSTRUCTIONS_": [
+    "1. Go to https://console.firebase.google.com/",
+    "2. Create or select your Firebase project",
+    "3. Add an Android app with package name matching your applicationId in build.gradle.kts",
+    "4. Download the google-services.json file",
+    "5. Replace this file with the downloaded google-services.json",
+    "6. Do NOT commit the real google-services.json to version control"
+  ],
+  "project_info": {
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",
+        "android_client_info": {
+          "package_name": "com.example.social_live_streaming_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

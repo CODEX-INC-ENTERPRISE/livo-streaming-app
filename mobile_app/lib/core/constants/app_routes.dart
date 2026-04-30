@@ -1,0 +1,115 @@
+import 'package:flutter/material.dart';
+import '../../screens/splash/splash_screen.dart';
+import '../../screens/onboarding/onboarding_screen.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/signup_screen.dart';
+import '../../screens/home/home_screen.dart';
+
+/// Named route constants for the Livo app.
+///
+/// Use these constants instead of raw strings when navigating so that
+/// route names are refactor-safe and discoverable.
+///
+/// ### Example
+/// ```dart
+/// Navigator.pushNamed(context, AppRoutes.login);
+/// Navigator.pushReplacementNamed(context, AppRoutes.home);
+/// ```
+class AppRoutes {
+  AppRoutes._(); // prevent instantiation
+
+  // ─── Core ─────────────────────────────────────────────────────────────────────
+  static const String splash = '/';
+  static const String onboarding = '/onboarding';
+
+  // ─── Auth ─────────────────────────────────────────────────────────────────────
+  static const String login = '/login';
+  static const String signup = '/signup';
+  static const String otpVerification = '/otp-verification';
+
+  // ─── Main App ─────────────────────────────────────────────────────────────────
+  static const String home = '/home';
+  static const String discover = '/discover';
+
+  // ─── Stream ───────────────────────────────────────────────────────────────────
+  static const String streamView = '/stream/view';
+  static const String streamStart = '/stream/start';
+
+  // ─── Voice Room ───────────────────────────────────────────────────────────────
+  static const String voiceRoom = '/voice-room';
+  static const String voiceRoomCreate = '/voice-room/create';
+
+  // ─── Profile ──────────────────────────────────────────────────────────────────
+  static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
+  static const String followers = '/profile/followers';
+  static const String following = '/profile/following';
+
+  // ─── Wallet ───────────────────────────────────────────────────────────────────
+  static const String wallet = '/wallet';
+  static const String purchaseCoins = '/wallet/purchase-coins';
+  static const String transactionHistory = '/wallet/transactions';
+  static const String withdrawal = '/wallet/withdrawal';
+
+  // ─── Notifications ────────────────────────────────────────────────────────────
+  static const String notifications = '/notifications';
+
+  // ─── Settings ─────────────────────────────────────────────────────────────────
+  static const String settings = '/settings';
+
+  // ─── Route Map ────────────────────────────────────────────────────────────────
+
+  /// The complete route table passed to [MaterialApp.routes].
+  ///
+  /// Screens that require arguments (e.g. [streamView], [voiceRoom],
+  /// [profile]) should use [MaterialApp.onGenerateRoute] for full argument
+  /// passing support. The entries below cover all argument-free screens.
+  static Map<String, WidgetBuilder> get routes => {
+        splash: (_) => const SplashScreen(),
+        onboarding: (_) => const OnboardingScreen(),
+        login: (_) => const LoginScreen(),
+        signup: (_) => const SignUpScreen(),
+        home: (_) => const HomeScreen(),
+        // The routes below are placeholders for screens not yet implemented.
+        // They will be replaced with real screen widgets as development
+        // progresses (tasks 20–22).
+        discover: (_) => const _PlaceholderScreen(title: 'Discover'),
+        streamView: (_) => const _PlaceholderScreen(title: 'Stream View'),
+        streamStart: (_) => const _PlaceholderScreen(title: 'Start Stream'),
+        voiceRoom: (_) => const _PlaceholderScreen(title: 'Voice Room'),
+        voiceRoomCreate: (_) => const _PlaceholderScreen(title: 'Create Voice Room'),
+        profile: (_) => const _PlaceholderScreen(title: 'Profile'),
+        editProfile: (_) => const _PlaceholderScreen(title: 'Edit Profile'),
+        followers: (_) => const _PlaceholderScreen(title: 'Followers'),
+        following: (_) => const _PlaceholderScreen(title: 'Following'),
+        wallet: (_) => const _PlaceholderScreen(title: 'Wallet'),
+        purchaseCoins: (_) => const _PlaceholderScreen(title: 'Purchase Coins'),
+        transactionHistory: (_) => const _PlaceholderScreen(title: 'Transactions'),
+        withdrawal: (_) => const _PlaceholderScreen(title: 'Withdrawal'),
+        notifications: (_) => const _PlaceholderScreen(title: 'Notifications'),
+        settings: (_) => const _PlaceholderScreen(title: 'Settings'),
+        otpVerification: (_) => const _PlaceholderScreen(title: 'OTP Verification'),
+      };
+}
+
+/// Temporary placeholder screen used for routes whose real screens have not
+/// been implemented yet. Replaced screen-by-screen as tasks are completed.
+class _PlaceholderScreen extends StatelessWidget {
+  final String title;
+
+  const _PlaceholderScreen({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Text(
+          '$title\n(Coming soon)',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      ),
+    );
+  }
+}

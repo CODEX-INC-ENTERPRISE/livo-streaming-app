@@ -1,0 +1,58 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'core/config/env_config.dart';
+import 'core/constants/app_routes.dart';
+import 'core/services/fcm_service.dart';
+import 'core/theme/app_theme.dart';
+import 'core/utils/logger.dart';
+
+void main() async {
+  // Must be called before any async work in main().
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Select environment. Override with --dart-define=APP_ENV=production for
+  // production builds, or call EnvConfig.setEnvironment() in a flavor entry
+  // point. Defaults to development when APP_ENV is not set.
+  Logger.info('Environment: ${EnvConfig.label}');
+  Logger.info('API base URL: ${EnvConfig.apiBaseUrl}');
+
+  // Set system UI overlay style.
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  // Initialise Firebase.
+  // NOTE: Requires a valid google-services.json (Android) and
+  // GoogleService-Info.plist (iOS) to be present. Replace the placeholder
+  // files in android/app/ and ios/Runner/ with real ones from the Firebase
+  // Console before running on a device.
+  await Firebase.initializeApp();
+  Logger.info('Firebase initialised');
+
+  // Initialise Firebase Cloud Messaging (registers background handler,
+  // requests notification permissions, and retrieves the FCM token).
+  await FCMService().initialize();
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Livo',
+      debugShowCheckedModeBanner: EnvConfig.showDebugBanner,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
+      initialRoute: AppRoutes.splash,
+      routes: AppRoutes.routes,
+    );
+  }
+}

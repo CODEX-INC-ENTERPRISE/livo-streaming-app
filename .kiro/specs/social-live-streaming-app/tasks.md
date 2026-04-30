@@ -487,11 +487,11 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Ensure structured error logging with context
     - _Requirements: 35.1, 35.2, 36.1, 36.2, 36.4_
 
-- [ ] 15. Checkpoint - Backend core functionality complete
+- [x] 15. Checkpoint - Backend core functionality complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Mobile App: Flutter project setup
-  - [ ] 16.1 Initialize Flutter project
+- [-] 16. Mobile App: Flutter project setup
+  - [x] 16.1 Initialize Flutter project
     - Create new Flutter project with proper package name
     - Configure iOS and Android app identifiers
     - Set up project structure: core/, models/, providers/, screens/, widgets/
@@ -499,7 +499,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Configure Flutter version constraints
     - _Requirements: 33.1, 33.2_
   
-  - [ ] 16.2 Configure Firebase for mobile app
+  - [x] 16.2 Configure Firebase for mobile app
     - Add Firebase configuration files (google-services.json, GoogleService-Info.plist)
     - Initialize Firebase in main.dart
     - Configure Firebase Authentication
@@ -507,7 +507,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Request notification permissions
     - _Requirements: 1.5, 27.5_
   
-  - [ ] 16.3 Set up app theme and constants
+  - [x] 16.3 Set up app theme and constants
     - Create theme configuration with colors and typography
     - Define app constants (API URLs, Agora app ID)
     - Create environment configuration for dev/prod
