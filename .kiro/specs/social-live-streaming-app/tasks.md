@@ -514,8 +514,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Set up app routing with named routes
     - _Requirements: General UI requirements_
 
-- [ ] 17. Mobile App: Core services
-  - [ ] 17.1 Implement API service
+- [x] 17. Mobile App: Core services
+  - [x] 17.1 Implement API service
     - Create ApiService class with Dio HTTP client
     - Configure base URL and timeouts (10 seconds)
     - Implement authentication interceptor to add token to headers
@@ -524,7 +524,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement error handling for network errors
     - _Requirements: 30.5_
   
-  - [ ] 17.2 Implement authentication service
+  - [x] 17.2 Implement authentication service
     - Create AuthService class
     - Implement phone number authentication with Firebase
     - Implement email authentication with Firebase
@@ -534,7 +534,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 1.1, 1.5, 2.1, 2.4_
 
 
-  - [ ] 17.3 Implement WebSocket service
+  - [x] 17.3 Implement WebSocket service
     - Create SocketService class with Socket.io client
     - Implement connection with authentication token
     - Set up event listeners for all WebSocket events
@@ -543,7 +543,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement disconnect and cleanup methods
     - _Requirements: 28.2, 28.3_
   
-  - [ ] 17.4 Implement storage service
+  - [x] 17.4 Implement storage service
     - Create StorageService class with flutter_secure_storage
     - Implement token storage and retrieval
     - Implement user data caching

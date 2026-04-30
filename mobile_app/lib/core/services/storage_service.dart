@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
@@ -89,7 +90,7 @@ class StorageService {
   // Shared preferences methods
   Future<void> setCurrentUser(Map<String, dynamic> user) async {
     try {
-      final userJson = user.toString(); // In real app, use jsonEncode
+      final userJson = jsonEncode(user);
       await _preferences.setString(AppConstants.currentUserKey, userJson);
       Logger.debug('Current user stored');
     } catch (e) {
@@ -102,10 +103,7 @@ class StorageService {
     try {
       final userJson = _preferences.getString(AppConstants.currentUserKey);
       if (userJson == null) return null;
-      
-      // In real app, use jsonDecode
-      // For now, return empty map
-      return {};
+      return jsonDecode(userJson) as Map<String, dynamic>;
     } catch (e) {
       Logger.error('Failed to retrieve current user', e);
       return null;
