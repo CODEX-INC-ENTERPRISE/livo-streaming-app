@@ -1,4 +1,4 @@
-package com.example.social_live_streaming_app
+package com.livo.app
 
 import io.flutter.embedding.android.FlutterActivity
 

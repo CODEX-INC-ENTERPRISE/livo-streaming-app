@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'chat_message.dart';
 
+/// Represents a multi-user audio voice room session.
 @immutable
 class VoiceRoom {
   final String id;
@@ -32,16 +34,18 @@ class VoiceRoom {
       participantLimit: json['participantLimit'] ?? 10,
       createdAt: DateTime.parse(json['createdAt']),
       participants: (json['participants'] as List<dynamic>?)
-          ?.map((e) => VoiceParticipant.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => VoiceParticipant.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       chatHistory: (json['chatHistory'] as List<dynamic>?)
-          ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
+              ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       status: VoiceRoomStatus.values.firstWhere(
         (e) => e.name == (json['status'] ?? 'active'),
         orElse: () => VoiceRoomStatus.active,
       ),
-      agoraChannelId: json['agoraChannelId'],
+      agoraChannelId: json['agoraChannelId'] as String?,
     );
   }
 
@@ -93,9 +97,8 @@ class VoiceRoom {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() {
-    return 'VoiceRoom(id: $id, name: $name, hostId: $hostId, participants: ${participants.length}, status: $status)';
-  }
+  String toString() =>
+      'VoiceRoom(id: $id, name: $name, hostId: $hostId, participants: ${participants.length}, status: $status)';
 
   // Helper methods
   int get participantCount => participants.length;
@@ -103,56 +106,36 @@ class VoiceRoom {
   bool get isEnded => status == VoiceRoomStatus.ended;
   bool get isFull => participantCount >= participantLimit;
   Duration get duration => DateTime.now().difference(createdAt);
-  
-  // Get host participant
-  VoiceParticipant? get hostParticipant {
-    return participants.firstWhere(
-      (p) => p.userId == hostId,
-      orElse: () => VoiceParticipant(userId: '', role: ParticipantRole.listener),
-    );
-  }
-  
-  // Get speakers
-  List<VoiceParticipant> get speakers {
-    return participants.where((p) => p.role == ParticipantRole.speaker).toList();
-  }
-  
-  // Get listeners
-  List<VoiceParticipant> get listeners {
-    return participants.where((p) => p.role == ParticipantRole.listener).toList();
-  }
-  
-  // Get participants with raised hands
-  List<VoiceParticipant> get raisedHands {
-    return participants.where((p) => p.isHandRaised).toList();
-  }
-  
-  // Check if user is in room
-  bool containsUser(String userId) {
-    return participants.any((p) => p.userId == userId);
-  }
-  
-  // Get participant by user ID
-  VoiceParticipant? getParticipant(String userId) {
-    try {
-      return participants.firstWhere((p) => p.userId == userId);
-    } catch (e) {
-      return null;
-    }
-  }
-  
-  // Check if user can speak
+
+  VoiceParticipant? get hostParticipant =>
+      participants.where((p) => p.userId == hostId).firstOrNull;
+
+  List<VoiceParticipant> get speakers =>
+      participants.where((p) => p.role == ParticipantRole.speaker).toList();
+
+  List<VoiceParticipant> get listeners =>
+      participants.where((p) => p.role == ParticipantRole.listener).toList();
+
+  List<VoiceParticipant> get raisedHands =>
+      participants.where((p) => p.isHandRaised).toList();
+
+  bool containsUser(String userId) =>
+      participants.any((p) => p.userId == userId);
+
+  VoiceParticipant? getParticipant(String userId) =>
+      participants.where((p) => p.userId == userId).firstOrNull;
+
   bool canUserSpeak(String userId) {
     final participant = getParticipant(userId);
-    return participant != null && participant.role == ParticipantRole.speaker && !participant.isMuted;
+    return participant != null &&
+        participant.role == ParticipantRole.speaker &&
+        !participant.isMuted;
   }
 }
 
-enum VoiceRoomStatus {
-  active,
-  ended,
-}
+enum VoiceRoomStatus { active, ended }
 
+/// A participant in a voice room.
 @immutable
 class VoiceParticipant {
   final String userId;
@@ -178,7 +161,8 @@ class VoiceParticipant {
       ),
       isHandRaised: json['isHandRaised'] ?? false,
       isMuted: json['isMuted'] ?? false,
-      joinedAt: json['joinedAt'] != null ? DateTime.parse(json['joinedAt']) : null,
+      joinedAt:
+          json['joinedAt'] != null ? DateTime.parse(json['joinedAt']) : null,
     );
   }
 
@@ -218,13 +202,8 @@ class VoiceParticipant {
   int get hashCode => userId.hashCode;
 
   @override
-  String toString() {
-    return 'VoiceParticipant(userId: $userId, role: $role, handRaised: $isHandRaised, muted: $isMuted)';
-  }
+  String toString() =>
+      'VoiceParticipant(userId: $userId, role: $role, handRaised: $isHandRaised, muted: $isMuted)';
 }
 
-enum ParticipantRole {
-  host,
-  speaker,
-  listener,
-}
+enum ParticipantRole { host, speaker, listener }

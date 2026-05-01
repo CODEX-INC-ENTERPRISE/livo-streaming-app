@@ -21,11 +21,11 @@ class AppConstants {
   static const String themeKey = 'app_theme';
 
   // ─── API Base URLs ────────────────────────────────────────────────────────────
-  /// Development API base URL (local backend).
-  static const String devBaseUrl = 'http://localhost:3000/api';
+  /// Development API base URL – points to the live Render backend.
+  static const String devBaseUrl = 'https://livo-streaming-app.onrender.com/api';
 
-  /// Production API base URL – replace with the real production domain.
-  static const String prodBaseUrl = 'https://api.livo.app/api';
+  /// Production API base URL – same Render backend for now.
+  static const String prodBaseUrl = 'https://livo-streaming-app.onrender.com/api';
 
   /// Convenience accessor – resolves to [devBaseUrl] by default.
   /// Prefer using [EnvConfig.apiBaseUrl] for environment-aware access.

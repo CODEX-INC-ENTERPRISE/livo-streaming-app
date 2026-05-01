@@ -3,9 +3,17 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../constants/app_constants.dart';
 import '../constants/environment.dart';
 import '../services/auth_service.dart';
-import '../services/storage_service.dart';
 import '../utils/logger.dart';
 
+/// Manages the Socket.io connection and exposes typed broadcast streams for
+/// each WebSocket event category.
+///
+/// Usage:
+/// ```dart
+/// final socket = SocketService();
+/// await socket.connect();
+/// socket.chatEvents.listen((event) { ... });
+/// ```
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
@@ -13,395 +21,222 @@ class SocketService {
 
   io.Socket? _socket;
   final AuthService _authService = AuthService();
-  final StorageService _storageService = StorageService();
-  
-  // Stream controllers for different event types
-  final StreamController<Map<String, dynamic>> _streamEventsController = 
+
+  // ─── Broadcast stream controllers ─────────────────────────────────────────────
+
+  final _streamEventsCtrl =
       StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _voiceEventsController = 
+  final _voiceEventsCtrl =
       StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _chatEventsController = 
+  final _chatEventsCtrl =
       StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _notificationEventsController = 
+  final _notificationEventsCtrl =
       StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _giftEventsController = 
+  final _giftEventsCtrl =
       StreamController<Map<String, dynamic>>.broadcast();
-  
-  // Public streams
-  Stream<Map<String, dynamic>> get streamEvents => _streamEventsController.stream;
-  Stream<Map<String, dynamic>> get voiceEvents => _voiceEventsController.stream;
-  Stream<Map<String, dynamic>> get chatEvents => _chatEventsController.stream;
-  Stream<Map<String, dynamic>> get notificationEvents => _notificationEventsController.stream;
-  Stream<Map<String, dynamic>> get giftEvents => _giftEventsController.stream;
-  
-  // Connection state
+
+  // ─── Public streams ───────────────────────────────────────────────────────────
+
+  Stream<Map<String, dynamic>> get streamEvents => _streamEventsCtrl.stream;
+  Stream<Map<String, dynamic>> get voiceEvents => _voiceEventsCtrl.stream;
+  Stream<Map<String, dynamic>> get chatEvents => _chatEventsCtrl.stream;
+  Stream<Map<String, dynamic>> get notificationEvents =>
+      _notificationEventsCtrl.stream;
+  Stream<Map<String, dynamic>> get giftEvents => _giftEventsCtrl.stream;
+
+  // ─── Connection state ─────────────────────────────────────────────────────────
+
   bool get isConnected => _socket?.connected ?? false;
   String? get socketId => _socket?.id;
-  
-  // Reconnection settings
+
   int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = AppConstants.maxSocketReconnectAttempts;
-  static const int _reconnectDelayMs = AppConstants.socketReconnectDelayMs;
-  
-  // Initialize socket connection
+
+  // ─── Connect / disconnect ─────────────────────────────────────────────────────
+
+  /// Establishes the Socket.io connection using the stored auth token.
   Future<void> connect() async {
-    try {
-      if (_socket != null && _socket!.connected) {
-        Logger.debug('Socket already connected');
-        return;
-      }
-      
-      final token = await _authService.getCurrentToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
-      }
-      
-      Logger.debug('Connecting to socket server');
-      
-      // Create socket with configuration
-      _socket = io.io(
-        Environment.socketUrl,
-        io.OptionBuilder()
-          .setTransports(['websocket'])
-          .enableAutoConnect()
-          .setExtraHeaders({'Authorization': 'Bearer $token'})
-          .build(),
-      );
-      
-      _setupEventListeners();
-      _setupConnectionListeners();
-      
-      // Manually connect
-      _socket!.connect();
-      
-      Logger.info('Socket connection initiated');
-    } catch (e) {
-      Logger.error('Failed to initialize socket connection', e);
-      rethrow;
-    }
-  }
-  
-  // Disconnect socket
-  Future<void> disconnect() async {
-    try {
-      if (_socket != null) {
-        _socket!.disconnect();
-        _socket!.dispose();
-        _socket = null;
-        _reconnectAttempts = 0;
-        Logger.info('Socket disconnected');
-      }
-    } catch (e) {
-      Logger.error('Failed to disconnect socket', e);
-      rethrow;
-    }
-  }
-  
-  // Setup event listeners
-  void _setupEventListeners() {
-    if (_socket == null) return;
-    
-    // Stream events
-    _socket!.on('stream:viewer-joined', (data) {
-      Logger.socketEvent('stream:viewer-joined', data);
-      _streamEventsController.add({
-        'type': 'viewer_joined',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('stream:viewer-left', (data) {
-      Logger.socketEvent('stream:viewer-left', data);
-      _streamEventsController.add({
-        'type': 'viewer_left',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('stream:chat-message', (data) {
-      Logger.socketEvent('stream:chat-message', data);
-      _chatEventsController.add({
-        'type': 'chat_message',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('stream:gift-sent', (data) {
-      Logger.socketEvent('stream:gift-sent', data);
-      _giftEventsController.add({
-        'type': 'gift_sent',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('stream:ended', (data) {
-      Logger.socketEvent('stream:ended', data);
-      _streamEventsController.add({
-        'type': 'stream_ended',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('stream:moderation', (data) {
-      Logger.socketEvent('stream:moderation', data);
-      _streamEventsController.add({
-        'type': 'moderation',
-        'data': data,
-      });
-    });
-    
-    // Voice room events
-    _socket!.on('voice:participant-joined', (data) {
-      Logger.socketEvent('voice:participant-joined', data);
-      _voiceEventsController.add({
-        'type': 'participant_joined',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('voice:participant-left', (data) {
-      Logger.socketEvent('voice:participant-left', data);
-      _voiceEventsController.add({
-        'type': 'participant_left',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('voice:role-changed', (data) {
-      Logger.socketEvent('voice:role-changed', data);
-      _voiceEventsController.add({
-        'type': 'role_changed',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('voice:hand-raised', (data) {
-      Logger.socketEvent('voice:hand-raised', data);
-      _voiceEventsController.add({
-        'type': 'hand_raised',
-        'data': data,
-      });
-    });
-    
-    _socket!.on('voice:chat', (data) {
-      Logger.socketEvent('voice:chat', data);
-      _chatEventsController.add({
-        'type': 'voice_chat',
-        'data': data,
-      });
-    });
-    
-    // Notification events
-    _socket!.on('notification:new', (data) {
-      Logger.socketEvent('notification:new', data);
-      _notificationEventsController.add({
-        'type': 'new_notification',
-        'data': data,
-      });
-    });
-    
-    // Error events
-    _socket!.on('error', (data) {
-      Logger.error('Socket error', data);
-    });
-    
-    // Disconnect event
-    _socket!.on('disconnect', (data) {
-      Logger.socketEvent('disconnect', data);
-    });
-  }
-  
-  // Setup connection listeners
-  void _setupConnectionListeners() {
-    if (_socket == null) return;
-    
-    _socket!.onConnect((_) {
-      Logger.info('Socket connected successfully');
-      _reconnectAttempts = 0;
-    });
-    
-    _socket!.onConnectError((data) {
-      Logger.error('Socket connection error', data);
-      _handleReconnection();
-    });
-    
-    _socket!.onDisconnect((_) {
-      Logger.warning('Socket disconnected');
-      _handleReconnection();
-    });
-    
-    _socket!.onConnectTimeout((data) {
-      Logger.error('Socket connection timeout', data);
-      _handleReconnection();
-    });
-  }
-  
-  // Handle reconnection
-  void _handleReconnection() {
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      Logger.error('Max reconnection attempts reached');
+    if (_socket != null && _socket!.connected) {
+      Logger.debug('Socket already connected');
       return;
     }
-    
+
+    final token = await _authService.getCurrentToken();
+    if (token == null) {
+      throw Exception('Cannot connect socket: no auth token available.');
+    }
+
+    Logger.debug('Connecting to socket server: ${Environment.socketUrl}');
+
+    _socket = io.io(
+      Environment.socketUrl,
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .setExtraHeaders({'Authorization': 'Bearer $token'})
+          .build(),
+    );
+
+    _setupConnectionListeners();
+    _setupEventListeners();
+
+    _socket!.connect();
+    Logger.info('Socket connection initiated');
+  }
+
+  /// Disconnects and disposes the socket without closing the stream controllers.
+  Future<void> disconnect() async {
+    if (_socket != null) {
+      _socket!.disconnect();
+      _socket!.dispose();
+      _socket = null;
+      _reconnectAttempts = 0;
+      Logger.info('Socket disconnected');
+    }
+  }
+
+  // ─── Emit helpers ─────────────────────────────────────────────────────────────
+
+  void _emit(String event, Map<String, dynamic> data) {
+    if (_socket == null || !_socket!.connected) {
+      throw Exception('Socket not connected. Call connect() first.');
+    }
+    _socket!.emit(event, data);
+  }
+
+  // Stream actions
+  void joinStream(String streamId) =>
+      _emit('stream:join', {'streamId': streamId});
+
+  void leaveStream(String streamId) =>
+      _emit('stream:leave', {'streamId': streamId});
+
+  void sendStreamChat(String streamId, String message) {
+    if (message.length > AppConstants.maxChatMessageLength) {
+      throw Exception('Message exceeds ${AppConstants.maxChatMessageLength} characters.');
+    }
+    _emit('stream:chat', {'streamId': streamId, 'message': message});
+  }
+
+  void sendGift(String streamId, String giftId) =>
+      _emit('stream:gift', {'streamId': streamId, 'giftId': giftId});
+
+  // Voice room actions
+  void joinVoiceRoom(String roomId) =>
+      _emit('voice:join', {'roomId': roomId});
+
+  void leaveVoiceRoom(String roomId) =>
+      _emit('voice:leave', {'roomId': roomId});
+
+  void raiseHand(String roomId) =>
+      _emit('voice:raise-hand', {'roomId': roomId});
+
+  void sendVoiceChat(String roomId, String message) {
+    if (message.length > AppConstants.maxChatMessageLength) {
+      throw Exception('Message exceeds ${AppConstants.maxChatMessageLength} characters.');
+    }
+    _emit('voice:chat', {'roomId': roomId, 'message': message});
+  }
+
+  // ─── Cleanup ──────────────────────────────────────────────────────────────────
+
+  /// Disconnects and closes all stream controllers. Call when the service is
+  /// no longer needed (e.g., app shutdown).
+  Future<void> dispose() async {
+    await disconnect();
+    await _streamEventsCtrl.close();
+    await _voiceEventsCtrl.close();
+    await _chatEventsCtrl.close();
+    await _notificationEventsCtrl.close();
+    await _giftEventsCtrl.close();
+    Logger.debug('SocketService disposed');
+  }
+
+  // ─── Private: connection listeners ───────────────────────────────────────────
+
+  void _setupConnectionListeners() {
+    _socket!.onConnect((_) {
+      Logger.info('Socket connected (id: ${_socket?.id})');
+      _reconnectAttempts = 0;
+    });
+
+    _socket!.onConnectError((data) {
+      Logger.error('Socket connection error', data);
+      _scheduleReconnect();
+    });
+
+    _socket!.onDisconnect((_) {
+      Logger.warning('Socket disconnected');
+      _scheduleReconnect();
+    });
+
+    _socket!.onConnectTimeout((data) {
+      Logger.error('Socket connection timeout', data);
+      _scheduleReconnect();
+    });
+
+    _socket!.on('error', (data) => Logger.error('Socket error', data));
+  }
+
+  void _scheduleReconnect() {
+    if (_reconnectAttempts >= AppConstants.maxSocketReconnectAttempts) {
+      Logger.error('Max socket reconnect attempts reached – giving up.');
+      return;
+    }
+
     _reconnectAttempts++;
-    final delay = _reconnectDelayMs * _reconnectAttempts;
-    
-    Logger.debug('Attempting reconnection in ${delay}ms (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
-    
-    Future.delayed(Duration(milliseconds: delay), () async {
+    final delayMs =
+        AppConstants.socketReconnectDelayMs * _reconnectAttempts;
+
+    Logger.debug(
+        'Reconnecting in ${delayMs}ms (attempt $_reconnectAttempts/${AppConstants.maxSocketReconnectAttempts})');
+
+    Future.delayed(Duration(milliseconds: delayMs), () async {
       try {
         await connect();
       } catch (e) {
-        Logger.error('Reconnection attempt failed', e);
+        Logger.error('Reconnect attempt $_reconnectAttempts failed', e);
       }
     });
   }
-  
-  // Join a stream room
-  Future<void> joinStream(String streamId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      Logger.debug('Joining stream room: $streamId');
-      _socket!.emit('stream:join', {'streamId': streamId});
-    } catch (e) {
-      Logger.error('Failed to join stream room', e);
-      rethrow;
-    }
+
+  // ─── Private: event listeners ─────────────────────────────────────────────────
+
+  void _setupEventListeners() {
+    // Stream events
+    _on('stream:viewer-joined', _streamEventsCtrl, 'viewer_joined');
+    _on('stream:viewer-left', _streamEventsCtrl, 'viewer_left');
+    _on('stream:ended', _streamEventsCtrl, 'stream_ended');
+    _on('stream:moderation', _streamEventsCtrl, 'moderation');
+
+    // Chat events (stream + voice)
+    _on('stream:chat-message', _chatEventsCtrl, 'stream_chat_message');
+    _on('voice:chat', _chatEventsCtrl, 'voice_chat_message');
+
+    // Gift events
+    _on('stream:gift-sent', _giftEventsCtrl, 'gift_sent');
+
+    // Voice room events
+    _on('voice:participant-joined', _voiceEventsCtrl, 'participant_joined');
+    _on('voice:participant-left', _voiceEventsCtrl, 'participant_left');
+    _on('voice:role-changed', _voiceEventsCtrl, 'role_changed');
+    _on('voice:hand-raised', _voiceEventsCtrl, 'hand_raised');
+
+    // Notification events
+    _on('notification:new', _notificationEventsCtrl, 'new_notification');
   }
-  
-  // Leave a stream room
-  Future<void> leaveStream(String streamId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
+
+  /// Registers a socket event listener that forwards payloads to [controller]
+  /// with a `type` field set to [type].
+  void _on(
+    String event,
+    StreamController<Map<String, dynamic>> controller,
+    String type,
+  ) {
+    _socket!.on(event, (data) {
+      Logger.socketEvent(event, data);
+      if (!controller.isClosed) {
+        controller.add({'type': type, 'data': data});
       }
-      
-      Logger.debug('Leaving stream room: $streamId');
-      _socket!.emit('stream:leave', {'streamId': streamId});
-    } catch (e) {
-      Logger.error('Failed to leave stream room', e);
-      rethrow;
-    }
-  }
-  
-  // Send chat message in stream
-  Future<void> sendStreamChat(String streamId, String message) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      if (message.length > AppConstants.maxChatMessageLength) {
-        throw Exception('Message too long');
-      }
-      
-      Logger.debug('Sending stream chat message');
-      _socket!.emit('stream:chat', {
-        'streamId': streamId,
-        'message': message,
-      });
-    } catch (e) {
-      Logger.error('Failed to send stream chat message', e);
-      rethrow;
-    }
-  }
-  
-  // Send virtual gift
-  Future<void> sendGift(String streamId, String giftId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      Logger.debug('Sending gift: $giftId to stream: $streamId');
-      _socket!.emit('stream:gift', {
-        'streamId': streamId,
-        'giftId': giftId,
-      });
-    } catch (e) {
-      Logger.error('Failed to send gift', e);
-      rethrow;
-    }
-  }
-  
-  // Join voice room
-  Future<void> joinVoiceRoom(String roomId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      Logger.debug('Joining voice room: $roomId');
-      _socket!.emit('voice:join', {'roomId': roomId});
-    } catch (e) {
-      Logger.error('Failed to join voice room', e);
-      rethrow;
-    }
-  }
-  
-  // Leave voice room
-  Future<void> leaveVoiceRoom(String roomId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      Logger.debug('Leaving voice room: $roomId');
-      _socket!.emit('voice:leave', {'roomId': roomId});
-    } catch (e) {
-      Logger.error('Failed to leave voice room', e);
-      rethrow;
-    }
-  }
-  
-  // Raise hand in voice room
-  Future<void> raiseHand(String roomId) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      Logger.debug('Raising hand in voice room: $roomId');
-      _socket!.emit('voice:raise-hand', {'roomId': roomId});
-    } catch (e) {
-      Logger.error('Failed to raise hand', e);
-      rethrow;
-    }
-  }
-  
-  // Send chat message in voice room
-  Future<void> sendVoiceChat(String roomId, String message) async {
-    try {
-      if (_socket == null || !_socket!.connected) {
-        throw Exception('Socket not connected');
-      }
-      
-      if (message.length > AppConstants.maxChatMessageLength) {
-        throw Exception('Message too long');
-      }
-      
-      Logger.debug('Sending voice room chat message');
-      _socket!.emit('voice:chat', {
-        'roomId': roomId,
-        'message': message,
-      });
-    } catch (e) {
-      Logger.error('Failed to send voice room chat message', e);
-      rethrow;
-    }
-  }
-  
-  // Cleanup
-  Future<void> dispose() async {
-    await disconnect();
-    await _streamEventsController.close();
-    await _voiceEventsController.close();
-    await _chatEventsController.close();
-    await _notificationEventsController.close();
-    await _giftEventsController.close();
-    Logger.debug('Socket service disposed');
+    });
   }
 }

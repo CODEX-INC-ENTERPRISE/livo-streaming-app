@@ -115,9 +115,7 @@ const register = async (req, res, next) => {
         throw new ValidationError('User already registered with this phone number or email');
       }
 
-      if (!password) {
-        throw new ValidationError('Password is required for phone/email registration');
-      }
+      // Password is optional for OTP-only registration
     } else {
       throw new ValidationError('Registration method not provided');
     }
@@ -210,6 +208,19 @@ const login = async (req, res, next) => {
         ],
       });
 
+      if (!user) {
+        throw new ValidationError('User not found. Please register first.');
+      }
+    } else if ((phoneNumber || email) && req.body.otp) {
+      // OTP-based login (passwordless)
+      const identifier = phoneNumber || email;
+      const otpVerification = await otpService.verifyOTP(identifier, req.body.otp);
+      if (!otpVerification.valid) {
+        throw new ValidationError(otpVerification.error || 'Invalid OTP');
+      }
+      user = await User.findOne({
+        $or: [{ phoneNumber: phoneNumber }, { email: email }],
+      });
       if (!user) {
         throw new ValidationError('User not found. Please register first.');
       }

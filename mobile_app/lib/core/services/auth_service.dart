@@ -82,7 +82,7 @@ class AuthService {
     try {
       Logger.debug('Verifying phone OTP for: $phoneNumber');
       final response = await _apiService.post<Map<String, dynamic>>(
-        AppConstants.registerEndpoint,
+        AppConstants.loginEndpoint,
         data: {'phoneNumber': phoneNumber, 'otp': otp},
       );
       final data = response.data!;
@@ -116,7 +116,7 @@ class AuthService {
     try {
       Logger.debug('Verifying email OTP for: $email');
       final response = await _apiService.post<Map<String, dynamic>>(
-        AppConstants.registerEndpoint,
+        AppConstants.loginEndpoint,
         data: {'email': email, 'otp': otp},
       );
       final data = response.data!;
@@ -159,7 +159,7 @@ class AuthService {
         AppConstants.registerEndpoint,
         data: {
           'socialProvider': 'google',
-          'socialToken': idToken,
+          'firebaseToken': idToken,
           'email': fbUser.email,
           'displayName': fbUser.displayName,
           'photoUrl': fbUser.photoURL,
@@ -202,7 +202,7 @@ class AuthService {
         AppConstants.registerEndpoint,
         data: {
           'socialProvider': 'apple',
-          'socialToken': idToken,
+          'firebaseToken': idToken,
           'email': fbUser.email,
           'displayName': fbUser.displayName ?? 'Apple User',
         },

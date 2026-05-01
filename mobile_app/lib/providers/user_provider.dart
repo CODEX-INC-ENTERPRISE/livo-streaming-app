@@ -5,46 +5,31 @@ import '../core/utils/logger.dart';
 
 class UserProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   Map<String, User> _users = {};
   bool _isLoading = false;
   String? _error;
-  
-  // Getters
+
   bool get isLoading => _isLoading;
   String? get error => _error;
-  
-  // Get user by ID
-  User? getUser(String userId) {
-    return _users[userId];
-  }
-  
-  // Load user profile
+
+  User? getUser(String userId) => _users[userId];
+
   Future<User> loadUserProfile(String userId) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      // Check if user is already cached
-      if (_users.containsKey(userId)) {
-        return _users[userId]!;
-      }
-      
-      // Load user from API
+
+      if (_users.containsKey(userId)) return _users[userId]!;
+
       final response = await _apiService.get('/users/$userId');
-      
       if (response.statusCode == 200) {
-        final userData = response.data as Map<String, dynamic>;
-        final user = User.fromJson(userData);
-        
-        // Cache the user
+        final user = User.fromJson(response.data as Map<String, dynamic>);
         _users[userId] = user;
-        
         return user;
-      } else {
-        throw Exception('Failed to load user profile');
       }
+      throw Exception('Failed to load user profile');
     } catch (e) {
       Logger.error('Failed to load user profile: $userId', e);
       _error = 'Failed to load user profile';
@@ -54,31 +39,14 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Follow a user
+
   Future<void> followUser(String targetUserId) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.post(
-        '/users/follow',
-        data: {'targetUserId': targetUserId},
-      );
-      
-      if (response.statusCode == 200) {
-        // Update cached user if exists
-        if (_users.containsKey(targetUserId)) {
-          final user = _users[targetUserId]!;
-          // In a real app, we would update the follower count
-          // For now, just notify listeners
-        }
-        
-        Logger.info('Successfully followed user: $targetUserId');
-      } else {
-        throw Exception('Failed to follow user');
-      }
+      await _apiService.post('/users/follow', data: {'targetUserId': targetUserId});
+      Logger.info('Followed user: $targetUserId');
     } catch (e) {
       Logger.error('Failed to follow user: $targetUserId', e);
       _error = 'Failed to follow user';
@@ -88,30 +56,14 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Unfollow a user
+
   Future<void> unfollowUser(String targetUserId) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.delete(
-        '/users/follow/$targetUserId',
-      );
-      
-      if (response.statusCode == 200) {
-        // Update cached user if exists
-        if (_users.containsKey(targetUserId)) {
-          final user = _users[targetUserId]!;
-          // In a real app, we would update the follower count
-          // For now, just notify listeners
-        }
-        
-        Logger.info('Successfully unfollowed user: $targetUserId');
-      } else {
-        throw Exception('Failed to unfollow user');
-      }
+      await _apiService.delete('/users/follow/$targetUserId');
+      Logger.info('Unfollowed user: $targetUserId');
     } catch (e) {
       Logger.error('Failed to unfollow user: $targetUserId', e);
       _error = 'Failed to unfollow user';
@@ -121,31 +73,14 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Block a user
+
   Future<void> blockUser(String targetUserId) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.post(
-        '/users/block',
-        data: {'targetUserId': targetUserId},
-      );
-      
-      if (response.statusCode == 200) {
-        // Update cached user if exists
-        if (_users.containsKey(targetUserId)) {
-          final user = _users[targetUserId]!;
-          // In a real app, we would mark the user as blocked
-          // For now, just notify listeners
-        }
-        
-        Logger.info('Successfully blocked user: $targetUserId');
-      } else {
-        throw Exception('Failed to block user');
-      }
+      await _apiService.post('/users/block', data: {'targetUserId': targetUserId});
+      Logger.info('Blocked user: $targetUserId');
     } catch (e) {
       Logger.error('Failed to block user: $targetUserId', e);
       _error = 'Failed to block user';
@@ -155,8 +90,7 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Report a user
+
   Future<void> reportUser({
     required String reportedUserId,
     required String reason,
@@ -166,21 +100,12 @@ class UserProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.post(
-        '/users/report',
-        data: {
-          'reportedUserId': reportedUserId,
-          'reason': reason,
-          'description': description,
-        },
-      );
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Logger.info('Successfully reported user: $reportedUserId');
-      } else {
-        throw Exception('Failed to report user');
-      }
+      await _apiService.post('/users/report', data: {
+        'reportedUserId': reportedUserId,
+        'reason': reason,
+        'description': description,
+      });
+      Logger.info('Reported user: $reportedUserId');
     } catch (e) {
       Logger.error('Failed to report user: $reportedUserId', e);
       _error = 'Failed to report user';
@@ -190,34 +115,23 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Search users
+
   Future<List<User>> searchUsers(String query) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.get(
-        '/users/search',
-        queryParameters: {'q': query},
-      );
-      
+      final response = await _apiService.get('/users/search', queryParameters: {'q': query});
       if (response.statusCode == 200) {
-        final usersData = response.data as List<dynamic>;
-        final users = usersData
-            .map((data) => User.fromJson(data as Map<String, dynamic>))
+        final users = (response.data as List<dynamic>)
+            .map((d) => User.fromJson(d as Map<String, dynamic>))
             .toList();
-        
-        // Cache the users
-        for (final user in users) {
-          _users[user.id] = user;
+        for (final u in users) {
+          _users[u.id] = u;
         }
-        
         return users;
-      } else {
-        throw Exception('Failed to search users');
       }
+      throw Exception('Failed to search users');
     } catch (e) {
       Logger.error('Failed to search users: $query', e);
       _error = 'Failed to search users';
@@ -227,33 +141,26 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Get user's followers
-  Future<List<User>> getUserFollowers(String userId) async {
+
+  Future<List<User>> getUserFollowers(String userId, {int page = 1, int limit = 20}) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
       final response = await _apiService.get(
         '/users/$userId/followers',
+        queryParameters: {'page': page, 'limit': limit},
       );
-      
       if (response.statusCode == 200) {
-        final followersData = response.data as List<dynamic>;
-        final followers = followersData
-            .map((data) => User.fromJson(data as Map<String, dynamic>))
-            .toList();
-        
-        // Cache the users
-        for (final user in followers) {
-          _users[user.id] = user;
+        final body = response.data;
+        final List<dynamic> data = body is List ? body : (body['followers'] ?? body['users'] ?? []);
+        final users = data.map((d) => User.fromJson(d as Map<String, dynamic>)).toList();
+        for (final u in users) {
+          _users[u.id] = u;
         }
-        
-        return followers;
-      } else {
-        throw Exception('Failed to load followers');
+        return users;
       }
+      throw Exception('Failed to load followers');
     } catch (e) {
       Logger.error('Failed to load followers for user: $userId', e);
       _error = 'Failed to load followers';
@@ -263,33 +170,26 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Get user's following
-  Future<List<User>> getUserFollowing(String userId) async {
+
+  Future<List<User>> getUserFollowing(String userId, {int page = 1, int limit = 20}) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
       final response = await _apiService.get(
         '/users/$userId/following',
+        queryParameters: {'page': page, 'limit': limit},
       );
-      
       if (response.statusCode == 200) {
-        final followingData = response.data as List<dynamic>;
-        final following = followingData
-            .map((data) => User.fromJson(data as Map<String, dynamic>))
-            .toList();
-        
-        // Cache the users
-        for (final user in following) {
-          _users[user.id] = user;
+        final body = response.data;
+        final List<dynamic> data = body is List ? body : (body['following'] ?? body['users'] ?? []);
+        final users = data.map((d) => User.fromJson(d as Map<String, dynamic>)).toList();
+        for (final u in users) {
+          _users[u.id] = u;
         }
-        
-        return following;
-      } else {
-        throw Exception('Failed to load following');
+        return users;
       }
+      throw Exception('Failed to load following');
     } catch (e) {
       Logger.error('Failed to load following for user: $userId', e);
       _error = 'Failed to load following';
@@ -299,45 +199,19 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  // Clear error
+
+  void invalidateUser(String userId) {
+    _users.remove(userId);
+    notifyListeners();
+  }
+
+  void clearCache() {
+    _users = {};
+    notifyListeners();
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-  
-  // Clear cache
-  void clearCache() {
-    _users.clear();
-    notifyListeners();
-  }
-  
-  // Preload multiple users
-  Future<void> preloadUsers(List<String> userIds) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-      
-      // Filter out already cached users
-      final uncachedIds = userIds.where((id) => !_users.containsKey(id)).toList();
-      
-      if (uncachedIds.isEmpty) {
-        return;
-      }
-      
-      // In a real app, we might batch load users
-      // For now, load them one by one
-      for (final userId in uncachedIds) {
-        try {
-          await loadUserProfile(userId);
-        } catch (e) {
-          Logger.error('Failed to preload user: $userId', e);
-          // Continue with other users
-        }
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 }

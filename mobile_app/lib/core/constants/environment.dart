@@ -20,8 +20,8 @@ class Environment {
   }
   
   static final Map<String, dynamic> _developmentConfig = {
-    'apiBaseUrl': 'http://localhost:3000/api',
-    'socketUrl': 'http://localhost:3000',
+    'apiBaseUrl': 'https://livo-streaming-app.onrender.com/api',
+    'socketUrl': 'https://livo-streaming-app.onrender.com',
     'agoraAppId': 'YOUR_AGORA_APP_ID_DEV',
     'firebase': {
       'apiKey': 'YOUR_FIREBASE_API_KEY_DEV',
@@ -35,8 +35,8 @@ class Environment {
   };
   
   static final Map<String, dynamic> _productionConfig = {
-    'apiBaseUrl': 'https://api.yourdomain.com/api',
-    'socketUrl': 'https://api.yourdomain.com',
+    'apiBaseUrl': 'https://livo-streaming-app.onrender.com/api',
+    'socketUrl': 'https://livo-streaming-app.onrender.com',
     'agoraAppId': 'YOUR_AGORA_APP_ID_PROD',
     'firebase': {
       'apiKey': 'YOUR_FIREBASE_API_KEY_PROD',

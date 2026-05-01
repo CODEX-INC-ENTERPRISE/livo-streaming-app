@@ -96,9 +96,9 @@ class EnvConfig {
   static String get socketUrl {
     switch (_environment) {
       case AppEnvironment.production:
-        return 'wss://api.livo.app';
+        return 'https://livo-streaming-app.onrender.com';
       case AppEnvironment.development:
-        return 'ws://localhost:3000';
+        return 'https://livo-streaming-app.onrender.com';
     }
   }
 

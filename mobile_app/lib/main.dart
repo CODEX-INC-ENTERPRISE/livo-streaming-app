@@ -22,6 +22,7 @@ void main() async {
   // Must be called before any async work in main().
   WidgetsFlutterBinding.ensureInitialized();
 
+
   // Select environment. Override with --dart-define=APP_ENV=production for
   // production builds, or call EnvConfig.setEnvironment() in a flavor entry
   // point. Defaults to development when APP_ENV is not set.
@@ -67,7 +68,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Livo',
-        debugShowCheckedModeBanner: EnvConfig.showDebugBanner,
+        debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light,
