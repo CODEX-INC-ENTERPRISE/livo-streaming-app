@@ -1,4 +1,4 @@
-const { getRedisClient } = require('../config/redis');
+const { getRedisClient, isRedisAvailable } = require('../config/redis');
 const logger = require('../utils/logger');
 
 /**
@@ -33,9 +33,14 @@ class CacheService {
 
   get redis() {
     if (!this._redis) {
+      if (!isRedisAvailable()) return null;
       this._redis = getRedisClient();
     }
     return this._redis;
+  }
+
+  get available() {
+    return isRedisAvailable();
   }
 
   /**
@@ -44,6 +49,7 @@ class CacheService {
    * @returns {Promise<any>} - Cached data or null
    */
   async get(key) {
+    if (!this.available) return null;
     try {
       const data = await this.redis.get(key);
       if (data) {
@@ -64,6 +70,7 @@ class CacheService {
    * @returns {Promise<void>}
    */
   async set(key, data, ttl) {
+    if (!this.available) return;
     try {
       await this.redis.setex(key, ttl, JSON.stringify(data));
     } catch (error) {
@@ -77,6 +84,7 @@ class CacheService {
    * @returns {Promise<void>}
    */
   async delete(key) {
+    if (!this.available) return;
     try {
       await this.redis.del(key);
     } catch (error) {
@@ -114,6 +122,7 @@ class CacheService {
    * @returns {Promise<number>} - Number of keys deleted
    */
   async invalidateByPattern(pattern) {
+    if (!this.available) return 0;
     try {
       const keys = await this.redis.keys(pattern);
       if (keys.length > 0) {
@@ -232,6 +241,7 @@ class CacheService {
    * @returns {Promise<number>} - Number of keys deleted
    */
   async clearAll() {
+    if (!this.available) return 0;
     try {
       const keys = await this.redis.keys('*');
       if (keys.length > 0) {

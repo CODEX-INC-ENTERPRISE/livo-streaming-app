@@ -16,8 +16,12 @@ const startServer = async () => {
     await connectDatabase();
     logger.info('Database connection established');
 
-    await connectRedis();
-    logger.info('Redis connection established');
+    try {
+      await connectRedis();
+      logger.info('Redis connection established');
+    } catch (error) {
+      logger.warn('Redis unavailable, continuing without cache', { error: error.message });
+    }
 
     try {
       initializeFirebase();
@@ -49,11 +53,13 @@ const startServer = async () => {
           const mongoose = require('mongoose');
           await mongoose.connection.close();
           logger.info('MongoDB connection closed');
-          
-          const { getRedisClient } = require('./config/redis');
-          const redisClient = getRedisClient();
-          await redisClient.quit();
-          logger.info('Redis connection closed');
+
+          const { getRedisClient, isRedisAvailable } = require('./config/redis');
+          if (isRedisAvailable()) {
+            const redisClient = getRedisClient();
+            await redisClient.quit();
+            logger.info('Redis connection closed');
+          }
           
           logger.info('Graceful shutdown completed');
           process.exit(0);

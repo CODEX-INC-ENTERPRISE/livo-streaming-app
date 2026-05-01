@@ -10,6 +10,7 @@ const connectRedis = async () => {
       socket: {
         host: config.redis.host,
         port: config.redis.port,
+        reconnectStrategy: false, // disable auto-reconnect
       },
     };
 
@@ -20,11 +21,7 @@ const connectRedis = async () => {
     redisClient = redis.createClient(clientConfig);
 
     redisClient.on('error', (err) => {
-      logger.error('Redis connection error', { error: err.message, stack: err.stack });
-    });
-
-    redisClient.on('connect', () => {
-      logger.info('Redis connecting...');
+      // suppress errors after initial connection — they're expected when Redis is down
     });
 
     redisClient.on('ready', () => {
@@ -34,34 +31,27 @@ const connectRedis = async () => {
       });
     });
 
-    redisClient.on('reconnecting', () => {
-      logger.warn('Redis reconnecting...');
-    });
-
-    redisClient.on('end', () => {
-      logger.warn('Redis connection closed');
-    });
-
     await redisClient.connect();
 
     return redisClient;
   } catch (error) {
-    logger.error('Failed to connect to Redis', {
-      error: error.message,
-      stack: error.stack,
-    });
-    throw error;
+    logger.warn('Redis unavailable, caching disabled', { error: error.message });
+    if (redisClient) {
+      redisClient.destroy?.();
+      redisClient = null;
+    }
+    return null;
   }
 };
 
 const getRedisClient = () => {
-  if (!redisClient) {
-    throw new Error('Redis client not initialized. Call connectRedis() first.');
-  }
-  return redisClient;
+  return redisClient; // may be null if Redis is unavailable
 };
+
+const isRedisAvailable = () => redisClient !== null;
 
 module.exports = {
   connectRedis,
   getRedisClient,
+  isRedisAvailable,
 };
