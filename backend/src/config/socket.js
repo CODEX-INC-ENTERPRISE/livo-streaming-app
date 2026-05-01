@@ -1,6 +1,4 @@
 const { Server } = require('socket.io');
-const { createAdapter } = require('@socket.io/redis-adapter');
-const { createClient } = require('redis');
 const { verifyJWT } = require('../middleware/auth');
 const { registerSocketHandlers } = require('../socket');
 const config = require('./index');
@@ -20,25 +18,36 @@ const initializeSocket = async (server) => {
       pingInterval: 25000,
     });
 
-    // Redis adapter for horizontal scaling
-    const pubClient = createClient({
-      socket: {
+    // Redis adapter for horizontal scaling (optional)
+    try {
+      const { createAdapter } = require('@socket.io/redis-adapter');
+      const { createClient } = require('redis');
+
+      const pubClient = createClient({
+        socket: {
+          host: config.redis.host,
+          port: config.redis.port,
+          reconnectStrategy: false,
+        },
+        password: config.redis.password || undefined,
+      });
+
+      const subClient = pubClient.duplicate();
+
+      pubClient.on('error', () => {});
+      subClient.on('error', () => {});
+
+      await Promise.all([pubClient.connect(), subClient.connect()]);
+
+      io.adapter(createAdapter(pubClient, subClient));
+
+      logger.info('Socket.io Redis adapter configured', {
         host: config.redis.host,
         port: config.redis.port,
-      },
-      password: config.redis.password || undefined,
-    });
-
-    const subClient = pubClient.duplicate();
-
-    await Promise.all([pubClient.connect(), subClient.connect()]);
-
-    io.adapter(createAdapter(pubClient, subClient));
-
-    logger.info('Socket.io Redis adapter configured', {
-      host: config.redis.host,
-      port: config.redis.port,
-    });
+      });
+    } catch (redisError) {
+      logger.warn('Socket.io Redis adapter unavailable, using in-memory adapter');
+    }
 
     // Authentication middleware
     io.use(async (socket, next) => {
@@ -94,7 +103,8 @@ const initializeSocket = async (server) => {
       error: error.message,
       stack: error.stack,
     });
-    throw error;
+    // Don't throw — server should still run without Socket.io
+    return null;
   }
 };
 
