@@ -32,7 +32,8 @@ const initializeFirebase = () => {
       error: error.message,
       stack: error.stack,
     });
-    throw error;
+    // Don't throw — Firebase is optional, server should still start
+    return null;
   }
 };
 

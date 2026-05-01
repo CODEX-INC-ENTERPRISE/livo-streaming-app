@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/logger.dart';
 import '../../models/stream.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/stream_provider.dart';
 import '../../providers/user_provider.dart';
+import 'report_user_screen.dart';
 
 /// Displays a user's public profile.
 ///
@@ -32,6 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<LiveStream> _pastStreams = [];
   bool _isLoading = true;
   bool _isFollowLoading = false;
+  bool _isBlocked = false;
   String? _error;
 
   @override
@@ -59,7 +62,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+
+      // Check if the current user has blocked this profile
+      final currentUser = context.read<AuthProvider>().currentUser;
+      if (mounted && currentUser != null) {
+        setState(() {
+          _isBlocked = currentUser.hasBlocked(widget.userId);
+        });
+      }    } catch (e) {
       if (mounted) {
         setState(() {
           _error = 'Failed to load profile';
@@ -117,6 +127,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _blockUser() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Block ${_user?.displayName ?? 'user'}?'),
+        content: const Text(
+          'They will no longer be able to interact with you, and you will not see their content.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await context.read<UserProvider>().blockUser(widget.userId);
+
+      final auth = context.read<AuthProvider>();
+      if (auth.currentUser != null) {
+        final updated = auth.currentUser!.copyWith(
+          blockedUserIds: List<String>.from(auth.currentUser!.blockedUserIds)
+            ..add(widget.userId),
+        );
+        auth.updateLocalUser(updated);
+      }
+
+      if (mounted) {
+        setState(() => _isBlocked = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_user?.displayName ?? 'User'} has been blocked.'),
+          ),
+        );
+      }
+    } catch (e) {
+      Logger.error('Failed to block user', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to block user. Please try again.')),
+        );
+      }
+    }
+  }
+
+  void _reportUser() {
+    if (_user == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReportUserScreen(
+          reportedUserId: widget.userId,
+          displayName: _user!.displayName,
+        ),
+      ),
+    );
+  }
+
+  void _showMoreOptions() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!_isBlocked)
+              ListTile(
+                leading: const Icon(Icons.block, color: AppColors.error),
+                title: const Text('Block user',
+                    style: TextStyle(color: AppColors.error)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _blockUser();
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.flag_outlined, color: AppColors.warning),
+              title: const Text('Report user'),
+              onTap: () {
+                Navigator.pop(context);
+                _reportUser();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _navigateToFollowers() {
     Navigator.pushNamed(
       context,
@@ -161,6 +274,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isOwn = _isOwnProfile;
     final following = _isFollowing(auth);
 
+    // If the current user has blocked this profile, show a minimal view
+    if (_isBlocked) {
+      return Scaffold(
+        appBar: AppBar(title: Text(_user?.displayName ?? 'Profile')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.block, size: 56, color: AppColors.mediumGrey),
+                SizedBox(height: 16),
+                Text(
+                  'You have blocked this user.\nTheir content is hidden.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _loadData,
@@ -175,6 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onFollow: _toggleFollow,
               onEdit: () => Navigator.pushNamed(context, AppRoutes.editProfile)
                   .then((_) => _loadData()),
+              onMoreOptions: isOwn ? null : _showMoreOptions,
             ),
             SliverToBoxAdapter(
               child: _ProfileStats(
@@ -239,6 +377,7 @@ class _ProfileAppBar extends StatelessWidget {
   final bool isFollowLoading;
   final VoidCallback onFollow;
   final VoidCallback onEdit;
+  final VoidCallback? onMoreOptions;
 
   const _ProfileAppBar({
     required this.user,
@@ -247,6 +386,7 @@ class _ProfileAppBar extends StatelessWidget {
     required this.isFollowLoading,
     required this.onFollow,
     required this.onEdit,
+    this.onMoreOptions,
   });
 
   @override
@@ -264,9 +404,9 @@ class _ProfileAppBar extends StatelessWidget {
             tooltip: 'Edit Profile',
             onPressed: onEdit,
           )
-        else
+        else ...[
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 4),
             child: Center(
               child: _FollowButton(
                 isFollowing: isFollowing,
@@ -275,6 +415,13 @@ class _ProfileAppBar extends StatelessWidget {
               ),
             ),
           ),
+          if (onMoreOptions != null)
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'More options',
+              onPressed: onMoreOptions,
+            ),
+        ],
       ],
     );
   }

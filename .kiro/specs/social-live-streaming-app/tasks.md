@@ -851,15 +851,15 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Save preferences to backend
     - _Requirements: 27.6_
 
-- [ ] 27. Mobile App: Additional features
-  - [ ] 27.1 Implement image caching
+- [x] 27. Mobile App: Additional features
+  - [x] 27.1 Implement image caching
     - Create ImageCache class with LRU cache
     - Cache profile pictures and gift images
     - Implement lazy loading for image lists
     - Display placeholder while loading
     - _Requirements: 40.2, 40.3, 40.5_
   
-  - [ ] 27.2 Implement error handling
+  - [x] 27.2 Implement error handling
     - Create error boundary widgets
     - Display user-friendly error messages
     - Implement retry mechanisms
@@ -867,7 +867,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Prevent app crashes from errors
     - _Requirements: 36.1, 36.2_
   
-  - [ ] 27.3 Implement blocking and reporting UI
+  - [x] 27.3 Implement blocking and reporting UI
     - Add block user option in profile menu
     - Add report user option in profile menu
     - Create report form with reason selection

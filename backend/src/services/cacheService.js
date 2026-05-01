@@ -28,7 +28,14 @@ const CACHE_CONFIG = {
  */
 class CacheService {
   constructor() {
-    this.redis = getRedisClient();
+    this._redis = null;
+  }
+
+  get redis() {
+    if (!this._redis) {
+      this._redis = getRedisClient();
+    }
+    return this._redis;
   }
 
   /**
