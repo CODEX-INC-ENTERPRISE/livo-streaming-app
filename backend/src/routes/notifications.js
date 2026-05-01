@@ -3,7 +3,7 @@ const router = express.Router();
 const notificationController = require('../controllers/notificationController');
 const { authenticate } = require('../middleware/auth');
 const { validateRequest, validateQuery } = require('../middleware/validation');
-const { paginationSchema } = require('../middleware/validationSchemas');
+const { paginationSchema, notificationPreferencesSchema, fcmTokenSchema } = require('../middleware/validationSchemas');
 
 // Apply authentication middleware to all notification routes
 router.use(authenticate);
