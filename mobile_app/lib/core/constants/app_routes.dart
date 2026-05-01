@@ -12,6 +12,12 @@ import '../../screens/profile/followers_screen.dart';
 import '../../screens/stream/stream_broadcast_screen.dart';
 import '../../screens/stream/stream_viewer_screen.dart';
 import '../../screens/voice_room/voice_room_screen.dart';
+import '../../screens/wallet/wallet_screen.dart';
+import '../../screens/wallet/purchase_coins_screen.dart';
+import '../../screens/wallet/withdrawal_screen.dart';
+import '../../screens/wallet/host_earnings_screen.dart';
+import '../../screens/notifications/notifications_screen.dart';
+import '../../screens/notifications/notification_preferences_screen.dart';
 
 /// Named route constants for the Livo app.
 ///
@@ -58,9 +64,11 @@ class AppRoutes {
   static const String purchaseCoins = '/wallet/purchase-coins';
   static const String transactionHistory = '/wallet/transactions';
   static const String withdrawal = '/wallet/withdrawal';
+  static const String hostEarnings = '/wallet/host-earnings';
 
   // ─── Notifications ────────────────────────────────────────────────────────────
   static const String notifications = '/notifications';
+  static const String notificationPreferences = '/notifications/preferences';
 
   // ─── Settings ─────────────────────────────────────────────────────────────────
   static const String settings = '/settings';
@@ -122,11 +130,14 @@ class AppRoutes {
             mode: FollowListMode.following,
           );
         },
-        wallet: (_) => const _PlaceholderScreen(title: 'Wallet'),
-        purchaseCoins: (_) => const _PlaceholderScreen(title: 'Purchase Coins'),
-        transactionHistory: (_) => const _PlaceholderScreen(title: 'Transactions'),
-        withdrawal: (_) => const _PlaceholderScreen(title: 'Withdrawal'),
-        notifications: (_) => const _PlaceholderScreen(title: 'Notifications'),
+        wallet: (_) => const WalletScreen(),
+        purchaseCoins: (_) => const PurchaseCoinsScreen(),
+        transactionHistory: (_) => const WalletScreen(),
+        withdrawal: (_) => const WithdrawalScreen(),
+        hostEarnings: (_) => const HostEarningsScreen(),
+        notifications: (_) => const NotificationsScreen(),
+        notificationPreferences: (_) =>
+            const NotificationPreferencesScreen(),
         settings: (_) => const _PlaceholderScreen(title: 'Settings'),
         otpVerification: (_) => const OtpVerificationScreen(),
       };

@@ -14,6 +14,10 @@ import 'providers/user_provider.dart';
 import 'providers/voice_room_provider.dart';
 import 'providers/wallet_provider.dart';
 
+/// Global navigator key used by [FCMService] to navigate from background
+/// notification taps without requiring a [BuildContext].
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   // Must be called before any async work in main().
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +46,7 @@ void main() async {
 
   // Initialise Firebase Cloud Messaging (registers background handler,
   // requests notification permissions, and retrieves the FCM token).
-  await FCMService().initialize();
+  await FCMService().initialize(navigatorKey: navigatorKey);
 
   runApp(const MyApp());
 }
@@ -67,6 +71,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light,
+        navigatorKey: navigatorKey,
         initialRoute: AppRoutes.splash,
         routes: AppRoutes.routes,
       ),

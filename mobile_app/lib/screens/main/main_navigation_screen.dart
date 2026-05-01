@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../home/home_screen.dart';
 import '../discover/discover_screen.dart';
 import '../profile/profile_screen.dart';
+import '../wallet/wallet_screen.dart';
 
 /// Main navigation shell with a persistent bottom navigation bar.
 ///
@@ -28,15 +31,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     final currentUserId =
         context.watch<AuthProvider>().currentUser?.id ?? '';
+    final unreadCount =
+        context.watch<NotificationProvider>().unreadCount;
 
     final screens = [
       const HomeScreen(),
       const DiscoverScreen(),
       ProfileScreen(userId: currentUserId),
-      const _PlaceholderTab(label: 'Wallet', icon: Icons.account_balance_wallet_outlined),
+      const WalletScreen(),
     ];
 
     return Scaffold(
+      appBar: _currentIndex == 0
+          ? AppBar(
+              title: const Text('Livo'),
+              actions: [
+                _NotificationBell(unreadCount: unreadCount),
+                const SizedBox(width: 4),
+              ],
+            )
+          : null,
       body: IndexedStack(
         index: _currentIndex,
         children: screens,
@@ -45,6 +59,50 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
       ),
+    );
+  }
+}
+
+/// Bell icon button with an unread-count badge shown in the app bar.
+class _NotificationBell extends StatelessWidget {
+  final int unreadCount;
+
+  const _NotificationBell({required this.unreadCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          tooltip: 'Notifications',
+          onPressed: () =>
+              Navigator.pushNamed(context, AppRoutes.notifications),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: AppColors.liveRed,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -90,35 +148,3 @@ class _BottomNavBar extends StatelessWidget {
   }
 }
 
-/// Temporary placeholder for tabs not yet implemented (Profile, Wallet).
-/// Replaced screen-by-screen as tasks are completed.
-class _PlaceholderTab extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _PlaceholderTab({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(label)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: AppColors.mediumGrey),
-            const SizedBox(height: 16),
-            Text(
-              '$label\n(Coming soon)',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

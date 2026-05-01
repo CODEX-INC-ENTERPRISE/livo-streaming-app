@@ -789,8 +789,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 13.1, 13.2, 13.3_
 
 
-- [ ] 25. Mobile App: Wallet and payments
-  - [ ] 25.1 Create wallet screen
+- [x] 25. Mobile App: Wallet and payments
+  - [x] 25.1 Create wallet screen
     - Display coin balance and diamond balance
     - Display transaction history with pagination
     - Add purchase coins button
@@ -798,7 +798,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement transaction filtering by type
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
   
-  - [ ] 25.2 Create coin purchase screen
+  - [x] 25.2 Create coin purchase screen
     - Display coin packages with prices
     - Show payment method options (Stripe, PayPal, Mada, stc pay)
     - Implement package selection
@@ -808,7 +808,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Update wallet balance on success
     - _Requirements: 15.1, 15.2, 15.3, 15.6, 17.2_
   
-  - [ ] 25.3 Create withdrawal screen (hosts only)
+  - [x] 25.3 Create withdrawal screen (hosts only)
     - Display diamond balance and equivalent credit
     - Show minimum withdrawal amount (1000 diamonds)
     - Implement withdrawal request form
@@ -817,7 +817,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Show withdrawal history
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
   
-  - [ ] 25.4 Create host earnings dashboard
+  - [x] 25.4 Create host earnings dashboard
     - Display total diamonds earned
     - Display pending withdrawals
     - Display completed withdrawals
@@ -825,8 +825,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Display top gifters
     - _Requirements: 18.4_
 
-- [ ] 26. Mobile App: Notifications
-  - [ ] 26.1 Implement push notification handling
+- [x] 26. Mobile App: Notifications
+  - [x] 26.1 Implement push notification handling
     - Configure FCM token registration
     - Send FCM token to backend on login
     - Handle foreground notifications
@@ -834,7 +834,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle notification tap to navigate to relevant screen
     - _Requirements: 27.1, 27.2, 27.3, 27.4, 27.5_
   
-  - [ ] 26.2 Create notifications screen
+  - [x] 26.2 Create notifications screen
     - Display notification list with pagination
     - Show notification icon, title, message, timestamp
     - Highlight unread notifications
@@ -842,7 +842,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Navigate to relevant screen on notification tap
     - _Requirements: 27.5_
   
-  - [ ] 26.3 Create notification preferences screen
+  - [x] 26.3 Create notification preferences screen
     - Display toggle switches for each notification type
     - Stream start notifications
     - Gift received notifications
