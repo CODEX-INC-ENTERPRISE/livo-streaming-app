@@ -24,6 +24,42 @@ class AuthService {
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
 
+  // ─── Registration ────────────────────────────────────────────────────────────
+
+  /// Registers a new user with phone number + OTP + display name.
+  Future<Map<String, dynamic>> registerWithPhone(
+      String phoneNumber, String otp, String displayName) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        AppConstants.registerEndpoint,
+        data: {'phoneNumber': phoneNumber, 'otp': otp, 'displayName': displayName},
+      );
+      final data = response.data!;
+      await _handleAuthSuccess(data);
+      return data;
+    } catch (e) {
+      Logger.error('Phone registration failed', e);
+      rethrow;
+    }
+  }
+
+  /// Registers a new user with email + OTP + display name.
+  Future<Map<String, dynamic>> registerWithEmail(
+      String email, String otp, String displayName) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        AppConstants.registerEndpoint,
+        data: {'email': email, 'otp': otp, 'displayName': displayName},
+      );
+      final data = response.data!;
+      await _handleAuthSuccess(data);
+      return data;
+    } catch (e) {
+      Logger.error('Email registration failed', e);
+      rethrow;
+    }
+  }
+
   // ─── Phone authentication ─────────────────────────────────────────────────────
 
   /// Sends an OTP to [phoneNumber] via the backend.
@@ -177,6 +213,23 @@ class AuthService {
     } catch (e) {
       Logger.error('Apple sign-in failed', e);
       rethrow;
+    }
+  }
+
+  // ─── OTP verification (unified) ──────────────────────────────────────────────
+
+  /// Verifies [otp] for either a phone number or email address.
+  ///
+  /// [contact] is the phone number or email that was used to request the OTP.
+  /// [isPhone] determines which backend field is used.
+  ///
+  /// Returns auth data on success (token + user).
+  Future<Map<String, dynamic>> verifyOtp(
+      String contact, String otp, {required bool isPhone}) async {
+    if (isPhone) {
+      return verifyPhoneOtp(contact, otp);
+    } else {
+      return verifyEmailOtp(contact, otp);
     }
   }
 

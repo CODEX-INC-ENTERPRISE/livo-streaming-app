@@ -609,8 +609,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 27.5, 27.6_
 
 
-- [ ] 20. Mobile App: Authentication screens
-  - [ ] 20.1 Create login screen
+- [x] 20. Mobile App: Authentication screens
+  - [x] 20.1 Create login screen
     - Build login UI with phone/email input fields
     - Add social login buttons (Google, Facebook, Apple)
     - Implement form validation
@@ -619,7 +619,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Display error messages on failure
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 20.2 Create registration screen
+  - [x] 20.2 Create registration screen
     - Build registration UI with input fields
     - Add phone number registration with OTP
     - Add email registration with OTP
@@ -629,7 +629,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Navigate to home on success
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
   
-  - [ ] 20.3 Create OTP verification screen
+  - [x] 20.3 Create OTP verification screen
     - Build OTP input UI with 6-digit code entry
     - Implement OTP resend functionality
     - Display countdown timer (5 minutes)
@@ -637,14 +637,14 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Navigate to home on success
     - _Requirements: 1.2, 1.3_
 
-- [ ] 21. Mobile App: Home and navigation
-  - [ ] 21.1 Create main navigation structure
+- [x] 21. Mobile App: Home and navigation
+  - [x] 21.1 Create main navigation structure
     - Build bottom navigation bar with tabs: Home, Discover, Profile, Wallet
     - Implement tab switching
     - Maintain state across tabs
     - _Requirements: General navigation_
   
-  - [ ] 21.2 Create home screen
+  - [x] 21.2 Create home screen
     - Build home screen with active streams list
     - Display stream thumbnails, host names, viewer counts
     - Implement pull-to-refresh
@@ -652,15 +652,15 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Navigate to stream view on tap
     - _Requirements: 7.1, 7.3_
   
-  - [ ] 21.3 Create discover screen
+  - [x] 21.3 Create discover screen
     - Display voice rooms list
     - Display featured hosts
     - Implement search functionality
     - Navigate to voice room or profile on tap
     - _Requirements: 11.4_
 
-- [ ] 22. Mobile App: User profile screens
-  - [ ] 22.1 Create profile view screen
+- [x] 22. Mobile App: User profile screens
+  - [x] 22.1 Create profile view screen
     - Display user profile information (name, bio, picture)
     - Display follower and following counts
     - Display follow button for other users
@@ -669,7 +669,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement follow/unfollow functionality
     - _Requirements: 3.1, 3.3, 4.3, 4.4_
   
-  - [ ] 22.2 Create profile edit screen
+  - [x] 22.2 Create profile edit screen
     - Build edit form with display name, bio, profile picture
     - Implement image picker for profile picture
     - Validate display name uniqueness
@@ -678,7 +678,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Display success/error messages
     - _Requirements: 3.1, 3.2, 3.4, 3.5_
   
-  - [ ] 22.3 Create followers/following list screens
+  - [x] 22.3 Create followers/following list screens
     - Display paginated list of followers
     - Display paginated list of following
     - Show user avatars and names

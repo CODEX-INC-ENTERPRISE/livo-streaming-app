@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import '../../screens/splash/splash_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/otp_verification_screen.dart';
 import '../../screens/auth/signup_screen.dart';
-import '../../screens/home/home_screen.dart';
+import '../../screens/main/main_navigation_screen.dart';
+import '../../screens/profile/profile_screen.dart';
+import '../../screens/profile/edit_profile_screen.dart';
+import '../../screens/profile/followers_screen.dart';
 
 /// Named route constants for the Livo app.
 ///
@@ -69,26 +73,45 @@ class AppRoutes {
         onboarding: (_) => const OnboardingScreen(),
         login: (_) => const LoginScreen(),
         signup: (_) => const SignUpScreen(),
-        home: (_) => const HomeScreen(),
+        // Main app shell – hosts the bottom nav and all tabs
+        home: (_) => const MainNavigationScreen(),
         // The routes below are placeholders for screens not yet implemented.
         // They will be replaced with real screen widgets as development
-        // progresses (tasks 20–22).
-        discover: (_) => const _PlaceholderScreen(title: 'Discover'),
+        // progresses (tasks 22+).
         streamView: (_) => const _PlaceholderScreen(title: 'Stream View'),
         streamStart: (_) => const _PlaceholderScreen(title: 'Start Stream'),
         voiceRoom: (_) => const _PlaceholderScreen(title: 'Voice Room'),
         voiceRoomCreate: (_) => const _PlaceholderScreen(title: 'Create Voice Room'),
-        profile: (_) => const _PlaceholderScreen(title: 'Profile'),
-        editProfile: (_) => const _PlaceholderScreen(title: 'Edit Profile'),
-        followers: (_) => const _PlaceholderScreen(title: 'Followers'),
-        following: (_) => const _PlaceholderScreen(title: 'Following'),
+        profile: (context) {
+          final userId = ModalRoute.of(context)?.settings.arguments as String?;
+          return ProfileScreen(userId: userId ?? '');
+        },
+        editProfile: (_) => const EditProfileScreen(),
+        followers: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
+          return FollowersScreen(
+            userId: args?['userId'] as String? ?? '',
+            displayName: args?['displayName'] as String?,
+            mode: FollowListMode.followers,
+          );
+        },
+        following: (context) {
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
+          return FollowersScreen(
+            userId: args?['userId'] as String? ?? '',
+            displayName: args?['displayName'] as String?,
+            mode: FollowListMode.following,
+          );
+        },
         wallet: (_) => const _PlaceholderScreen(title: 'Wallet'),
         purchaseCoins: (_) => const _PlaceholderScreen(title: 'Purchase Coins'),
         transactionHistory: (_) => const _PlaceholderScreen(title: 'Transactions'),
         withdrawal: (_) => const _PlaceholderScreen(title: 'Withdrawal'),
         notifications: (_) => const _PlaceholderScreen(title: 'Notifications'),
         settings: (_) => const _PlaceholderScreen(title: 'Settings'),
-        otpVerification: (_) => const _PlaceholderScreen(title: 'OTP Verification'),
+        otpVerification: (_) => const OtpVerificationScreen(),
       };
 }
 

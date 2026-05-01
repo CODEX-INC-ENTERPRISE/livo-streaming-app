@@ -12,13 +12,15 @@ class LiveStreamProvider extends ChangeNotifier {
   LiveStream? _currentStream;
   bool _isLoading = false;
   String? _error;
-  
+  bool _hasMore = true;
+
   // Getters
   List<LiveStream> get activeStreams => _activeStreams;
   LiveStream? get currentStream => _currentStream;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isInStream => _currentStream != null;
+  bool get hasMore => _hasMore;
   
   // Initialize provider
   Future<void> initialize() async {
@@ -59,22 +61,54 @@ class LiveStreamProvider extends ChangeNotifier {
     });
   }
   
-  // Load active streams
-  Future<void> loadActiveStreams() async {
+  // Load active streams with pagination support.
+  // Pass [refresh] = true to reset the list (e.g. pull-to-refresh).
+  Future<void> loadActiveStreams({
+    int page = 1,
+    int limit = 20,
+    bool refresh = false,
+  }) async {
     try {
       _isLoading = true;
       _error = null;
+      if (refresh || page == 1) {
+        _activeStreams = [];
+        _hasMore = true;
+      }
       notifyListeners();
-      
-      final response = await _apiService.get('/streams/active');
-      
+
+      final response = await _apiService.get(
+        '/streams/active',
+        queryParameters: {'page': page, 'limit': limit},
+      );
+
       if (response.statusCode == 200) {
-        final streamsData = response.data as List<dynamic>;
-        _activeStreams = streamsData
+        final body = response.data;
+        List<dynamic> streamsData;
+
+        // Support both array response and paginated { streams, total } shape
+        if (body is List) {
+          streamsData = body;
+        } else if (body is Map && body.containsKey('streams')) {
+          streamsData = body['streams'] as List<dynamic>;
+        } else {
+          streamsData = [];
+        }
+
+        final newStreams = streamsData
             .map((data) => LiveStream.fromJson(data as Map<String, dynamic>))
             .toList();
-        
-        Logger.info('Loaded ${_activeStreams.length} active streams');
+
+        if (page == 1) {
+          _activeStreams = newStreams;
+        } else {
+          _activeStreams = [..._activeStreams, ...newStreams];
+        }
+
+        // If fewer results than requested, no more pages
+        _hasMore = newStreams.length >= limit;
+
+        Logger.info('Loaded ${newStreams.length} active streams (page $page)');
       } else {
         throw Exception('Failed to load active streams');
       }
@@ -427,9 +461,40 @@ class LiveStreamProvider extends ChangeNotifier {
     notifyListeners();
   }
   
-  // Refresh streams
+  // Load past streams for a specific user (host profile)
+  Future<List<LiveStream>> loadUserStreams(String userId) async {
+    try {
+      final response = await _apiService.get(
+        '/streams',
+        queryParameters: {'hostId': userId, 'status': 'ended', 'limit': 20},
+      );
+
+      if (response.statusCode == 200) {
+        final body = response.data;
+        List<dynamic> streamsData;
+
+        if (body is List) {
+          streamsData = body;
+        } else if (body is Map && body.containsKey('streams')) {
+          streamsData = body['streams'] as List<dynamic>;
+        } else {
+          streamsData = [];
+        }
+
+        return streamsData
+            .map((d) => LiveStream.fromJson(d as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      Logger.error('Failed to load user streams for $userId', e);
+      return [];
+    }
+  }
+
+  // Refresh streams (resets to page 1)
   Future<void> refreshStreams() async {
-    await loadActiveStreams();
+    await loadActiveStreams(refresh: true);
   }
   
   // Dispose
