@@ -361,8 +361,4 @@ exports.sendGift = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  createGift,
-  getGifts,
-  sendGift,
-};
+
