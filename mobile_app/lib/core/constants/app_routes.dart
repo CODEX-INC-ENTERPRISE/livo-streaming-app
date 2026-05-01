@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/voice_room.dart';
 import '../../screens/splash/splash_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/auth/login_screen.dart';
@@ -8,6 +9,9 @@ import '../../screens/main/main_navigation_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/followers_screen.dart';
+import '../../screens/stream/stream_broadcast_screen.dart';
+import '../../screens/stream/stream_viewer_screen.dart';
+import '../../screens/voice_room/voice_room_screen.dart';
 
 /// Named route constants for the Livo app.
 ///
@@ -78,9 +82,22 @@ class AppRoutes {
         // The routes below are placeholders for screens not yet implemented.
         // They will be replaced with real screen widgets as development
         // progresses (tasks 22+).
-        streamView: (_) => const _PlaceholderScreen(title: 'Stream View'),
-        streamStart: (_) => const _PlaceholderScreen(title: 'Start Stream'),
-        voiceRoom: (_) => const _PlaceholderScreen(title: 'Voice Room'),
+        streamView: (context) {
+          final streamId =
+              ModalRoute.of(context)?.settings.arguments as String?;
+          return StreamViewerScreen(streamId: streamId ?? '');
+        },
+        streamStart: (context) {
+          final title =
+              ModalRoute.of(context)?.settings.arguments as String? ??
+                  'Live Stream';
+          return StreamBroadcastScreen(streamTitle: title);
+        },
+        voiceRoom: (context) {
+          final room = ModalRoute.of(context)?.settings.arguments as VoiceRoom?;
+          if (room == null) return const _PlaceholderScreen(title: 'Voice Room');
+          return VoiceRoomScreen(room: room);
+        },
         voiceRoomCreate: (_) => const _PlaceholderScreen(title: 'Create Voice Room'),
         profile: (context) {
           final userId = ModalRoute.of(context)?.settings.arguments as String?;

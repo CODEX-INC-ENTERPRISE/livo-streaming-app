@@ -686,8 +686,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 4.4_
 
 
-- [ ] 23. Mobile App: Live streaming implementation
-  - [ ] 23.1 Implement Agora streaming service
+- [x] 23. Mobile App: Live streaming implementation
+  - [x] 23.1 Implement Agora streaming service
     - Create StreamService class
     - Initialize Agora RTC engine with app ID
     - Implement startBroadcasting method for hosts
@@ -697,7 +697,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle Agora callbacks and events
     - _Requirements: 6.1, 6.2, 7.1, 7.2_
   
-  - [ ] 23.2 Create stream broadcast screen (host)
+  - [x] 23.2 Create stream broadcast screen (host)
     - Build broadcast UI with video preview
     - Display viewer count in real-time
     - Display chat messages overlay
@@ -709,7 +709,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle stream end
     - _Requirements: 6.1, 6.4, 8.2, 9.3, 10.1, 10.2, 10.3, 10.5_
   
-  - [ ] 23.3 Create stream viewer screen
+  - [x] 23.3 Create stream viewer screen
     - Build viewer UI with video player
     - Display host information and viewer count
     - Display chat messages overlay
@@ -721,7 +721,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle stream ended event
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.2, 9.2, 9.3_
   
-  - [ ] 23.4 Implement stream chat widget
+  - [x] 23.4 Implement stream chat widget
     - Create chat message list widget
     - Display messages with sender name and timestamp
     - Auto-scroll to latest message
@@ -732,7 +732,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Receive and display messages in real-time
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
   
-  - [ ] 23.5 Implement gift sending UI
+  - [x] 23.5 Implement gift sending UI
     - Create gift selection bottom sheet
     - Display available gifts with prices
     - Show user's coin balance
@@ -743,7 +743,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Show insufficient funds error if needed
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
   
-  - [ ] 23.6 Implement host moderation UI
+  - [x] 23.6 Implement host moderation UI
     - Create moderation menu for viewers
     - Add mute, kick, block, assign moderator options
     - Show confirmation dialogs
@@ -751,8 +751,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Update UI based on moderation actions
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 24. Mobile App: Voice room implementation
-  - [ ] 24.1 Create voice room screen
+- [x] 24. Mobile App: Voice room implementation
+  - [x] 24.1 Create voice room screen
     - Build voice room UI with participant grid
     - Display host and speakers prominently
     - Display listeners list
@@ -762,7 +762,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Implement leave room button
     - _Requirements: 11.1, 11.4, 11.5, 12.1, 12.3, 12.4_
   
-  - [ ] 24.2 Implement voice room audio
+  - [x] 24.2 Implement voice room audio
     - Initialize Agora audio engine
     - Implement audio-only mode
     - Handle speaker role (enable microphone)
@@ -771,7 +771,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle role changes from host
     - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6_
   
-  - [ ] 24.3 Implement voice room controls
+  - [x] 24.3 Implement voice room controls
     - Implement raise hand functionality
     - Implement promote to speaker (host only)
     - Implement demote to listener (host only)
@@ -779,7 +779,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Handle WebSocket events for role changes
     - _Requirements: 12.4, 12.5, 12.6_
   
-  - [ ] 24.4 Implement voice room chat
+  - [x] 24.4 Implement voice room chat
     - Create chat widget for voice rooms
     - Display text messages with sender names
     - Implement chat input and send

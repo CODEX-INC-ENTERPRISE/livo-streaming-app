@@ -11,6 +11,7 @@ import 'providers/auth_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/stream_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/voice_room_provider.dart';
 import 'providers/wallet_provider.dart';
 
 void main() async {
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LiveStreamProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => VoiceRoomProvider()),
       ],
       child: MaterialApp(
         title: 'Livo',
