@@ -37,22 +37,37 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Backend public profile returns followerCount/followingCount as ints
+    // Full user object returns followerIds/followingIds as arrays
+    final followerIds = json['followerIds'] != null
+        ? List<String>.from(json['followerIds'])
+        : List<String>.filled(json['followerCount'] ?? 0, '');
+    final followingIds = json['followingIds'] != null
+        ? List<String>.from(json['followingIds'])
+        : List<String>.filled(json['followingCount'] ?? 0, '');
+
     return User(
       id: json['_id'] ?? json['id'] ?? '',
-      phoneNumber: json['phoneNumber'],
-      email: json['email'],
+      phoneNumber: json['phoneNumber'] as String?,
+      email: json['email'] as String?,
       displayName: json['displayName'] ?? '',
-      bio: json['bio'],
-      profilePictureUrl: json['profilePictureUrl'],
-      registeredAt: DateTime.parse(json['registeredAt']),
-      lastLoginAt: json['lastLoginAt'] != null ? DateTime.parse(json['lastLoginAt']) : null,
+      bio: json['bio'] as String?,
+      profilePictureUrl: json['profilePictureUrl'] as String?,
+      registeredAt: json['registeredAt'] != null
+          ? DateTime.tryParse(json['registeredAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      lastLoginAt: json['lastLoginAt'] != null
+          ? DateTime.tryParse(json['lastLoginAt'].toString())
+          : null,
       isBlocked: json['isBlocked'] ?? false,
       isHost: json['isHost'] ?? false,
-      followerIds: List<String>.from(json['followerIds'] ?? []),
-      followingIds: List<String>.from(json['followingIds'] ?? []),
+      followerIds: followerIds,
+      followingIds: followingIds,
       blockedUserIds: List<String>.from(json['blockedUserIds'] ?? []),
       wallet: json['wallet'] != null ? Map<String, dynamic>.from(json['wallet']) : null,
-      notificationPrefs: json['notificationPrefs'] != null ? Map<String, bool>.from(json['notificationPrefs']) : null,
+      notificationPrefs: json['notificationPrefs'] != null
+          ? Map<String, bool>.from(json['notificationPrefs'])
+          : null,
     );
   }
 

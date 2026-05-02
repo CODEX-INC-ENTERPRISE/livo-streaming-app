@@ -25,7 +25,12 @@ class UserProvider extends ChangeNotifier {
 
       final response = await _apiService.get('/users/$userId');
       if (response.statusCode == 200) {
-        final user = User.fromJson(response.data as Map<String, dynamic>);
+        final body = response.data as Map<String, dynamic>;
+        // Backend wraps profile in { user: {...} }
+        final userData = body.containsKey('user')
+            ? body['user'] as Map<String, dynamic>
+            : body;
+        final user = User.fromJson(userData);
         _users[userId] = user;
         return user;
       }
@@ -123,9 +128,9 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
       final response = await _apiService.get('/users/search', queryParameters: {'q': query});
       if (response.statusCode == 200) {
-        final users = (response.data as List<dynamic>)
-            .map((d) => User.fromJson(d as Map<String, dynamic>))
-            .toList();
+        final body = response.data;
+        final List<dynamic> data = body is List ? body : (body['users'] ?? []);
+        final users = data.map((d) => User.fromJson(d as Map<String, dynamic>)).toList();
         for (final u in users) {
           _users[u.id] = u;
         }
@@ -153,7 +158,8 @@ class UserProvider extends ChangeNotifier {
       );
       if (response.statusCode == 200) {
         final body = response.data;
-        final List<dynamic> data = body is List ? body : (body['followers'] ?? body['users'] ?? []);
+        // Backend returns { followers: [...], pagination: {...} }
+        final List<dynamic> data = body is List ? body : (body['followers'] ?? []);
         final users = data.map((d) => User.fromJson(d as Map<String, dynamic>)).toList();
         for (final u in users) {
           _users[u.id] = u;
@@ -182,7 +188,8 @@ class UserProvider extends ChangeNotifier {
       );
       if (response.statusCode == 200) {
         final body = response.data;
-        final List<dynamic> data = body is List ? body : (body['following'] ?? body['users'] ?? []);
+        // Backend returns { following: [...], pagination: {...} }
+        final List<dynamic> data = body is List ? body : (body['following'] ?? []);
         final users = data.map((d) => User.fromJson(d as Map<String, dynamic>)).toList();
         for (final u in users) {
           _users[u.id] = u;

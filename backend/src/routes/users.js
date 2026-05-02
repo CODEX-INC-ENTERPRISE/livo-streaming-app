@@ -12,6 +12,10 @@ const {
 
 const router = express.Router();
 
+// Must be before /:userId to avoid being caught as a userId param
+router.get('/featured-hosts', userController.getFeaturedHosts);
+router.get('/search', userController.searchUsers);
+
 router.get('/:userId', userController.getProfile);
 
 router.put('/:userId', authenticate, validateRequest(updateProfileSchema), userController.updateProfile);

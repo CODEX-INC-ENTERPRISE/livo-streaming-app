@@ -420,6 +420,74 @@ const reportUser = async (req, res, next) => {
   }
 };
 
+const getFeaturedHosts = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const hosts = await User.find({ isHost: true, isBlocked: false })
+      .select('displayName profilePictureUrl bio followerIds')
+      .sort({ 'followerIds.length': -1 })
+      .limit(limit)
+      .lean();
+
+    res.json({
+      hosts: hosts.map(h => ({
+        id: h._id,
+        displayName: h.displayName,
+        profilePictureUrl: h.profilePictureUrl,
+        bio: h.bio,
+        isHost: true,
+        followerCount: h.followerIds?.length ?? 0,
+        followingCount: 0,
+        followerIds: h.followerIds ?? [],
+        followingIds: [],
+        blockedUserIds: [],
+        isBlocked: false,
+        registeredAt: new Date().toISOString(),
+      })),
+    });
+  } catch (error) {
+    logger.error('Get featured hosts error', { error: error.message });
+    next(error);
+  }
+};
+
+const searchUsers = async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 1) {
+      return res.json({ users: [] });
+    }
+
+    const users = await User.find({
+      isBlocked: false,
+      displayName: { $regex: q.trim(), $options: 'i' },
+    })
+      .select('displayName profilePictureUrl bio isHost followerIds')
+      .limit(20)
+      .lean();
+
+    res.json({
+      users: users.map(u => ({
+        id: u._id,
+        displayName: u.displayName,
+        profilePictureUrl: u.profilePictureUrl,
+        bio: u.bio,
+        isHost: u.isHost ?? false,
+        followerCount: u.followerIds?.length ?? 0,
+        followingCount: 0,
+        followerIds: u.followerIds ?? [],
+        followingIds: [],
+        blockedUserIds: [],
+        isBlocked: false,
+        registeredAt: new Date().toISOString(),
+      })),
+    });
+  } catch (error) {
+    logger.error('Search users error', { error: error.message });
+    next(error);
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -429,4 +497,6 @@ module.exports = {
   getFollowing,
   blockUser,
   reportUser,
+  getFeaturedHosts,
+  searchUsers,
 };

@@ -29,16 +29,25 @@ class VoiceRoom {
   factory VoiceRoom.fromJson(Map<String, dynamic> json) {
     return VoiceRoom(
       id: json['_id'] ?? json['id'] ?? '',
-      hostId: json['hostId'] ?? '',
+      hostId: (json['hostId'] is Map ? json['hostId']['_id'] : json['hostId']) ?? '',
       name: json['name'] ?? '',
       participantLimit: json['participantLimit'] ?? 10,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
       participants: (json['participants'] as List<dynamic>?)
               ?.map((e) => VoiceParticipant.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       chatHistory: (json['chatHistory'] as List<dynamic>?)
-              ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+              ?.map((e) {
+                final msg = e as Map<String, dynamic>;
+                // Ensure timestamp exists — fall back to now if missing
+                if (!msg.containsKey('timestamp')) {
+                  msg['timestamp'] = DateTime.now().toIso8601String();
+                }
+                return ChatMessage.fromJson(msg);
+              })
               .toList() ??
           [],
       status: VoiceRoomStatus.values.firstWhere(
