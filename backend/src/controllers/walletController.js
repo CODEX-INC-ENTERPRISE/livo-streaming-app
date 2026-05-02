@@ -58,10 +58,11 @@ exports.getWallet = async (req, res, next) => {
  */
 exports.getTransactions = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    // Support both /transactions (uses JWT userId) and /transactions/:userId
+    const userId = req.params.userId || req.userId;
     const { page = 1, limit = 20, type } = req.query;
 
-    // Authorization check - users can only view their own transactions
+    // Authorization check
     if (req.userId !== userId) {
       return res.status(403).json({
         success: false,

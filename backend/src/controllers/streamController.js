@@ -633,3 +633,34 @@ exports.moderateStream = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get streams for a specific user (host profile)
+ * GET /api/streams?hostId=:userId&status=ended
+ */
+exports.getUserStreams = async (req, res, next) => {
+  try {
+    const { hostId, status = 'ended', limit = 20, page = 1 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = {};
+    if (hostId) query.hostId = hostId;
+    if (status) query.status = status;
+
+    const streams = await Stream.find(query)
+      .populate('hostId', 'displayName profilePictureUrl')
+      .sort({ startedAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    res.json({
+      streams,
+      total: streams.length,
+      page: parseInt(page),
+    });
+  } catch (error) {
+    logger.error('Error fetching user streams', { error: error.message });
+    next(error);
+  }
+};

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import '../config/env_config.dart';
 import '../utils/logger.dart';
 
@@ -232,6 +232,22 @@ class StreamService {
 
   /// Returns a widget that renders the local camera preview (host).
   Widget buildLocalView() {
+    if (_engine == null) {
+      return Container(
+        color: const Color(0xFF1a1a1a),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.videocam_off, color: Colors.white54, size: 48),
+              SizedBox(height: 8),
+              Text('Camera unavailable',
+                  style: TextStyle(color: Colors.white54)),
+            ],
+          ),
+        ),
+      );
+    }
     return AgoraVideoView(
       controller: VideoViewController(
         rtcEngine: _engine!,

@@ -31,6 +31,7 @@ router.get('/:userId', authenticate, walletController.getWallet);
 router.get('/:userId/balance', authenticate, walletController.getBalance);
 
 // Get transaction history with pagination and filtering
+router.get('/transactions', authenticate, walletController.getTransactions);
 router.get('/transactions/:userId', authenticate, walletController.getTransactions);
 
 // Purchase coins endpoint

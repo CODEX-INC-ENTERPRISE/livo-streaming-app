@@ -56,21 +56,26 @@ class WalletProvider extends ChangeNotifier {
   Future<void> _loadAvailableGifts() async {
     try {
       final response = await _apiService.get('/gifts');
-      
       if (response.statusCode == 200) {
-        final giftsData = response.data as List<dynamic>;
+        final body = response.data;
+        // Backend returns { gifts: [...], giftsByCategory: {...}, total: N }
+        List<dynamic> giftsData;
+        if (body is List) {
+          giftsData = body;
+        } else if (body is Map && body.containsKey('gifts')) {
+          giftsData = body['gifts'] as List<dynamic>;
+        } else {
+          giftsData = [];
+        }
         _availableGifts = giftsData
             .map((data) => VirtualGift.fromJson(data as Map<String, dynamic>))
             .where((gift) => gift.isActive)
             .toList();
-        
         Logger.info('Loaded ${_availableGifts.length} available gifts');
-      } else {
-        throw Exception('Failed to load gifts');
       }
     } catch (e) {
       Logger.error('Failed to load available gifts', e);
-      // Don't throw here, just log the error
+      // Non-fatal
     }
   }
   

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/api_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 
@@ -86,8 +87,19 @@ class _LoginScreenState extends State<LoginScreen>
         await auth.verifyEmailOtp(_pendingContact, otp);
       }
       if (mounted) Navigator.pushReplacementNamed(context, '/home');
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        _showSnack('No account found. Please sign up first.',
+            action: SnackBarAction(
+              label: 'Sign Up',
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, '/signup'),
+            ));
+      } else {
+        _showSnack(e.message);
+      }
     } catch (e) {
-      _showSnack(auth.error ?? 'Invalid OTP');
+      _showSnack(auth.error ?? 'Invalid OTP. Please try again.');
     }
   }
 
@@ -111,10 +123,10 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _showSnack(String msg) {
+  void _showSnack(String msg, {SnackBarAction? action}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), action: action));
   }
 
   @override

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/api_service.dart';
 import '../../core/services/stream_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/logger.dart';
@@ -61,21 +62,77 @@ class _StreamBroadcastScreenState extends State<StreamBroadcastScreen> {
         token: '', // Token provided by backend in production
       );
 
-      // 3. Listen for gift events
-      _giftSub = context.read<WalletProvider>().availableGifts.isEmpty
-          ? null
-          : null; // Gift events come via socket (handled in provider)
-
       if (mounted) setState(() => _isStarting = false);
+    } on ApiException catch (e) {
+      Logger.error('Failed to start broadcast', e);
+      if (!mounted) return;
+
+      // Special case: already has an active stream — offer to end it
+      if (e.statusCode == 400 && e.message.toLowerCase().contains('already has an active stream')) {
+        setState(() => _isStarting = false);
+        _showAlreadyActiveStreamDialog();
+        return;
+      }
+
+      setState(() {
+        _isStarting = false;
+        _error = e.message;
+      });
     } catch (e) {
       Logger.error('Failed to start broadcast', e);
       if (mounted) {
         setState(() {
           _isStarting = false;
-          _error = 'Failed to start stream. Please try again.';
+          _error = e.toString().replaceFirst('Exception: ', '');
         });
       }
     }
+  }
+
+  void _showAlreadyActiveStreamDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkSurface,
+        title: const Text('Active Stream Found',
+            style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'You already have an active stream. Would you like to end it and start a new one?',
+          style: TextStyle(color: AppColors.darkTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context); // go back
+            },
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.mediumGrey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.liveRed),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _isStarting = true);
+              try {
+                await context.read<LiveStreamProvider>().endStream();
+                await _startStream();
+              } catch (e) {
+                if (mounted) {
+                  setState(() {
+                    _isStarting = false;
+                    _error = 'Failed to end previous stream. Please try again.';
+                  });
+                }
+              }
+            },
+            child: const Text('End & Start New'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _endStream() async {

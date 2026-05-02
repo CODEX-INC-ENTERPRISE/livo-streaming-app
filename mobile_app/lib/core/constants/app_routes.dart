@@ -110,8 +110,15 @@ class AppRoutes {
         },
         voiceRoomCreate: (_) => const _PlaceholderScreen(title: 'Create Voice Room'),
         profile: (context) {
-          final userId = ModalRoute.of(context)?.settings.arguments as String?;
-          return ProfileScreen(userId: userId ?? '');
+          final args = ModalRoute.of(context)?.settings.arguments;
+          // Accept either a String userId or a User object
+          String userId = '';
+          if (args is String) {
+            userId = args;
+          } else if (args is Map) {
+            userId = (args['userId'] ?? args['id'] ?? '').toString();
+          }
+          return ProfileScreen(userId: userId);
         },
         editProfile: (_) => const EditProfileScreen(),
         followers: (context) {

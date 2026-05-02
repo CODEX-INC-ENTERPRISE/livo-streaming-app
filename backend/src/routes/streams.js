@@ -96,4 +96,7 @@ router.post(
   giftController.sendGift
 );
 
+// User streams (for profile page)
+router.get('/', authenticate, streamController.getUserStreams);
+
 module.exports = router;

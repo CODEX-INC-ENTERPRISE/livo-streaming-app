@@ -167,7 +167,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   void _navigateToProfile(User user) {
-    Navigator.pushNamed(context, AppRoutes.profile, arguments: user);
+    Navigator.pushNamed(context, AppRoutes.profile, arguments: user.id);
   }
 
   @override

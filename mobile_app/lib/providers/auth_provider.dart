@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
+import '../core/services/api_service.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/fcm_service.dart';
 import '../core/services/storage_service.dart';
@@ -253,11 +254,26 @@ class AuthProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
       if (_currentUser == null) throw Exception('No user logged in');
+
+      // Call backend API to persist changes
+      final apiService = ApiService();
+      await apiService.put(
+        '/users/${_currentUser!.id}',
+        data: {
+          if (displayName != null) 'displayName': displayName,
+          if (bio != null) 'bio': bio,
+          if (profilePictureUrl != null) 'profilePictureUrl': profilePictureUrl,
+        },
+      );
+
+      // Update local state
       _currentUser = _currentUser!.copyWith(
         displayName: displayName ?? _currentUser!.displayName,
         bio: bio ?? _currentUser!.bio,
         profilePictureUrl: profilePictureUrl ?? _currentUser!.profilePictureUrl,
       );
+
+      // Persist updated user to storage
       await _storageService.setCurrentUser(_currentUser!.toJson());
       Logger.info('Profile updated successfully');
     } catch (e) {

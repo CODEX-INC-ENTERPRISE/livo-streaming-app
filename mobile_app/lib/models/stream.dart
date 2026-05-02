@@ -8,6 +8,8 @@ export 'chat_message.dart';
 class LiveStream {
   final String id;
   final String hostId;
+  final String? hostName;
+  final String? hostAvatarUrl;
   final String title;
   final DateTime startedAt;
   final DateTime? endedAt;
@@ -24,6 +26,8 @@ class LiveStream {
   const LiveStream({
     required this.id,
     required this.hostId,
+    this.hostName,
+    this.hostAvatarUrl,
     required this.title,
     required this.startedAt,
     this.endedAt,
@@ -39,12 +43,28 @@ class LiveStream {
   });
 
   factory LiveStream.fromJson(Map<String, dynamic> json) {
+    // hostId may be a populated object or a plain string ID
+    final hostIdRaw = json['hostId'];
+    final String hostId = hostIdRaw is Map
+        ? (hostIdRaw['_id'] ?? hostIdRaw['id'] ?? '').toString()
+        : (hostIdRaw ?? '').toString();
+
+    // hostName and avatar from populated hostId object
+    final String? hostName = hostIdRaw is Map ? hostIdRaw['displayName'] as String? : null;
+    final String? hostAvatar = hostIdRaw is Map ? hostIdRaw['profilePictureUrl'] as String? : null;
+
     return LiveStream(
       id: json['_id'] ?? json['id'] ?? '',
-      hostId: json['hostId'] ?? '',
+      hostId: hostId,
+      hostName: hostName,
+      hostAvatarUrl: hostAvatar,
       title: json['title'] ?? '',
-      startedAt: DateTime.parse(json['startedAt']),
-      endedAt: json['endedAt'] != null ? DateTime.parse(json['endedAt']) : null,
+      startedAt: json['startedAt'] != null
+          ? DateTime.tryParse(json['startedAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      endedAt: json['endedAt'] != null
+          ? DateTime.tryParse(json['endedAt'].toString())
+          : null,
       peakViewerCount: json['peakViewerCount'] ?? 0,
       totalGiftsReceived: json['totalGiftsReceived'] ?? 0,
       currentViewerIds: List<String>.from(json['currentViewerIds'] ?? []),
@@ -85,6 +105,8 @@ class LiveStream {
   LiveStream copyWith({
     String? id,
     String? hostId,
+    String? hostName,
+    String? hostAvatarUrl,
     String? title,
     DateTime? startedAt,
     DateTime? endedAt,
@@ -101,6 +123,8 @@ class LiveStream {
     return LiveStream(
       id: id ?? this.id,
       hostId: hostId ?? this.hostId,
+      hostName: hostName ?? this.hostName,
+      hostAvatarUrl: hostAvatarUrl ?? this.hostAvatarUrl,
       title: title ?? this.title,
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,

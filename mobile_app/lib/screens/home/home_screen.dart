@@ -4,6 +4,7 @@ import 'package:provider/provider.dart' hide StreamProvider;
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/stream.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/stream_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -156,28 +157,48 @@ class _HomeScreenState extends State<HomeScreen>
 
             // ── Content ──────────────────────────────────────────────────────
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Following tab
-                  _StreamGrid(
-                    provider: provider,
-                    scrollController: _scrollController,
-                    isFetchingMore: _isFetchingMore,
-                    onRefresh: _onRefresh,
-                    onStreamTap: _joinStream,
-                    onLoadInitial: _loadInitial,
-                  ),
-                  // For You tab — same data for now
-                  _StreamGrid(
-                    provider: provider,
-                    scrollController: ScrollController(),
-                    isFetchingMore: false,
-                    onRefresh: _onRefresh,
-                    onStreamTap: _joinStream,
-                    onLoadInitial: _loadInitial,
-                  ),
-                ],
+              child: Builder(
+                builder: (context) {
+                  final followingIds =
+                      context.watch<AuthProvider>().currentUser?.followingIds ?? [];
+                  final followingStreams = provider.activeStreams
+                      .where((s) => followingIds.contains(s.hostId))
+                      .toList();
+
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Following tab — only streams from followed hosts
+                      _StreamGrid(
+                        provider: provider,
+                        streams: followingStreams,
+                        scrollController: _scrollController,
+                        isFetchingMore: _isFetchingMore,
+                        onRefresh: _onRefresh,
+                        onStreamTap: _joinStream,
+                        onLoadInitial: _loadInitial,
+                        emptyMessage: followingIds.isEmpty
+                            ? 'Follow hosts to see their streams here'
+                            : 'No live streams from people you follow',
+                        emptyIcon: followingIds.isEmpty
+                            ? Icons.person_add_outlined
+                            : Icons.videocam_off_outlined,
+                      ),
+                      // For You tab — all streams
+                      _StreamGrid(
+                        provider: provider,
+                        streams: provider.activeStreams,
+                        scrollController: ScrollController(),
+                        isFetchingMore: false,
+                        onRefresh: _onRefresh,
+                        onStreamTap: _joinStream,
+                        onLoadInitial: _loadInitial,
+                        emptyMessage: 'No live streams right now',
+                        emptyIcon: Icons.videocam_off_outlined,
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -216,19 +237,25 @@ class _IconCircleButton extends StatelessWidget {
 
 class _StreamGrid extends StatelessWidget {
   final LiveStreamProvider provider;
+  final List<LiveStream> streams;
   final ScrollController scrollController;
   final bool isFetchingMore;
   final Future<void> Function() onRefresh;
   final void Function(LiveStream) onStreamTap;
   final Future<void> Function() onLoadInitial;
+  final String emptyMessage;
+  final IconData emptyIcon;
 
   const _StreamGrid({
     required this.provider,
+    required this.streams,
     required this.scrollController,
     required this.isFetchingMore,
     required this.onRefresh,
     required this.onStreamTap,
     required this.onLoadInitial,
+    this.emptyMessage = 'No live streams right now',
+    this.emptyIcon = Icons.videocam_off_outlined,
   });
 
   @override
@@ -253,21 +280,21 @@ class _StreamGrid extends StatelessWidget {
       );
     }
 
-    if (provider.activeStreams.isEmpty) {
+    if (streams.isEmpty) {
       return RefreshIndicator(
         onRefresh: onRefresh,
         color: AppColors.primaryGreen,
         child: ListView(
-          children: const [
-            SizedBox(height: 120),
+          children: [
+            const SizedBox(height: 120),
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.videocam_off_outlined,
-                      size: 64, color: AppColors.mediumGrey),
-                  SizedBox(height: 12),
-                  Text('No live streams right now',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  Icon(emptyIcon, size: 64, color: AppColors.mediumGrey),
+                  const SizedBox(height: 12),
+                  Text(emptyMessage,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.textSecondary)),
                 ],
               ),
             ),
@@ -288,13 +315,12 @@ class _StreamGrid extends StatelessWidget {
           mainAxisSpacing: 16,
           childAspectRatio: 0.62,
         ),
-        itemCount:
-            provider.activeStreams.length + (isFetchingMore ? 2 : 0),
+        itemCount: streams.length + (isFetchingMore ? 2 : 0),
         itemBuilder: (context, index) {
-          if (index >= provider.activeStreams.length) {
+          if (index >= streams.length) {
             return const SizedBox.shrink();
           }
-          final stream = provider.activeStreams[index];
+          final stream = streams[index];
           return _StreamCard(
             stream: stream,
             onTap: () => onStreamTap(stream),
@@ -430,8 +456,13 @@ class _StreamCard extends StatelessWidget {
             CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.lightGrey,
-              child: const Icon(Icons.person,
-                  size: 16, color: AppColors.grey),
+              backgroundImage: stream.hostAvatarUrl != null &&
+                      stream.hostAvatarUrl!.isNotEmpty
+                  ? NetworkImage(stream.hostAvatarUrl!)
+                  : null,
+              child: (stream.hostAvatarUrl == null || stream.hostAvatarUrl!.isEmpty)
+                  ? const Icon(Icons.person, size: 16, color: AppColors.grey)
+                  : null,
             ),
             const SizedBox(width: 6),
             // Host name + followers
@@ -440,7 +471,7 @@ class _StreamCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _shortHostName(stream.hostId),
+                    stream.hostName ?? _shortHostName(stream.hostId),
                     style: const TextStyle(
                       fontFamily: 'PlusJakartaSans',
                       fontSize: 12,

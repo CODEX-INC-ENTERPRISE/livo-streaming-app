@@ -43,7 +43,7 @@ const configSchema = Joi.object({
   
   OTP_EXPIRATION_SECONDS: Joi.number().default(300),
   OTP_RATE_LIMIT_WINDOW: Joi.number().default(900),
-  OTP_RATE_LIMIT_MAX: Joi.number().default(5),
+  OTP_RATE_LIMIT_MAX: Joi.number().default(20),
   
   BCRYPT_ROUNDS: Joi.number().default(12),
   SESSION_TIMEOUT_DAYS: Joi.number().default(30),
@@ -53,13 +53,13 @@ const configSchema = Joi.object({
   MIN_WITHDRAWAL_DIAMONDS: Joi.number().min(0).default(1000),
   
   RATE_LIMIT_AUTH_WINDOW_MS: Joi.number().default(15 * 60 * 1000),
-  RATE_LIMIT_AUTH_MAX: Joi.number().default(5),
+  RATE_LIMIT_AUTH_MAX: Joi.number().default(50),
   RATE_LIMIT_API_WINDOW_MS: Joi.number().default(60 * 1000),
-  RATE_LIMIT_API_MAX: Joi.number().default(100),
+  RATE_LIMIT_API_MAX: Joi.number().default(500),
   RATE_LIMIT_CHAT_WINDOW_MS: Joi.number().default(1000),
-  RATE_LIMIT_CHAT_MAX: Joi.number().default(5),
+  RATE_LIMIT_CHAT_MAX: Joi.number().default(10),
   RATE_LIMIT_PAYMENT_WINDOW_MS: Joi.number().default(60 * 60 * 1000),
-  RATE_LIMIT_PAYMENT_MAX: Joi.number().default(10),
+  RATE_LIMIT_PAYMENT_MAX: Joi.number().default(20),
 }).unknown();
 
 const { value: envVars, error } = configSchema.validate(process.env);

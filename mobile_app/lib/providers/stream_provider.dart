@@ -145,7 +145,7 @@ class LiveStreamProvider extends ChangeNotifier {
         _currentStream = stream;
         
         // Join stream room via socket
-        _socketService.joinStream(stream.id);
+        try { _socketService.joinStream(stream.id); } catch (_) {}
         
         Logger.info('Stream started: ${stream.id}');
         return stream;
@@ -178,15 +178,15 @@ class LiveStreamProvider extends ChangeNotifier {
       );
       
       if (response.statusCode == 200) {
-        // Leave stream room via socket
-        _socketService.leaveStream(_currentStream!.id);
-        
+        // Leave stream room via socket (best-effort)
+        try { _socketService.leaveStream(_currentStream!.id); } catch (_) {}
+
         // Remove from active streams
         _activeStreams.removeWhere((s) => s.id == _currentStream!.id);
-        
+
         // Clear current stream
         _currentStream = null;
-        
+
         Logger.info('Stream ended successfully');
       } else {
         throw Exception('Failed to end stream');
@@ -207,28 +207,47 @@ class LiveStreamProvider extends ChangeNotifier {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      
-      final response = await _apiService.post(
-        '/streams/$streamId/join',
-      );
-      
+
+      final response = await _apiService.post('/streams/$streamId/join');
+
       if (response.statusCode == 200) {
-        // Load stream details
-        final streamResponse = await _apiService.get('/streams/$streamId');
-        final streamData = streamResponse.data as Map<String, dynamic>;
-        final stream = LiveStream.fromJson(streamData);
-        
-        // Set as current stream
+        final body = response.data as Map<String, dynamic>;
+        // Join response includes stream data directly
+        LiveStream stream;
+        if (body.containsKey('streamId') || body.containsKey('agoraChannelId')) {
+          // Merge join response with existing stream data from active list
+          final existing = _activeStreams.firstWhere(
+            (s) => s.id == streamId,
+            orElse: () => LiveStream(
+              id: streamId,
+              hostId: '',
+              title: '',
+              startedAt: DateTime.now(),
+              peakViewerCount: 0,
+              totalGiftsReceived: 0,
+              currentViewerIds: [],
+              chatHistory: [],
+              status: StreamStatus.active,
+              mutedUserIds: [],
+              kickedUserIds: [],
+              moderatorIds: [],
+              agoraChannelId: body['agoraChannelId'] as String?,
+            ),
+          );
+          stream = existing.copyWith(
+            agoraChannelId: body['agoraChannelId'] as String? ?? existing.agoraChannelId,
+          );
+        } else {
+          stream = LiveStream.fromJson(body);
+        }
+
         _currentStream = stream;
-        
-        // Join stream room via socket
-        _socketService.joinStream(streamId);
-        
+        // Socket join is best-effort — don't crash if not connected
+        try { _socketService.joinStream(streamId); } catch (_) {}
         Logger.info('Joined stream: $streamId');
         return stream;
-      } else {
-        throw Exception('Failed to join stream');
       }
+      throw Exception('Failed to join stream');
     } catch (e) {
       Logger.error('Failed to join stream: $streamId', e);
       _error = 'Failed to join stream';
@@ -257,9 +276,9 @@ class LiveStreamProvider extends ChangeNotifier {
       );
       
       if (response.statusCode == 200) {
-        // Leave stream room via socket
-        _socketService.leaveStream(streamId);
-        
+        // Leave stream room via socket (best-effort)
+        try { _socketService.leaveStream(streamId); } catch (_) {}
+
         // Clear current stream
         _currentStream = null;
         

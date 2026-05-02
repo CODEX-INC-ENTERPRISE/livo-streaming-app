@@ -10,12 +10,11 @@ const {
   paginationSchema 
 } = require('../middleware/validationSchemas');
 
-// Apply authentication middleware to all routes
-router.use(authenticate);
+// Public routes (no auth required)
+router.get('/active', validateQuery(paginationSchema), voiceRoomController.getActiveVoiceRooms);
 
-/**
- * @swagger
- * /api/voice-rooms/create:
+// Apply authentication middleware to all routes below
+router.use(authenticate);
  *   post:
  *     summary: Create a new voice room
  *     description: Creates a voice room with the current user as host
