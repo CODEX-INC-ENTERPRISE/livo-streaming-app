@@ -16,11 +16,11 @@ const startServer = async () => {
     await connectDatabase();
     logger.info('Database connection established');
 
+    // Redis is optional — used for caching and socket adapter only
     try {
       await connectRedis();
-      logger.info('Redis connection established');
     } catch (error) {
-      logger.warn('Redis unavailable, continuing without cache', { error: error.message });
+      logger.warn('Redis unavailable, continuing without cache');
     }
 
     try {

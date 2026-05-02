@@ -1,215 +1,142 @@
-const { getRedisClient } = require('../config/redis');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+const twilio = require('twilio');
+const OTP = require('../models/OTP');
 const config = require('../config');
 const logger = require('../utils/logger');
-const circuitBreakerService = require('./circuitBreakerService');
 
 class OTPService {
   constructor() {
-    this.redisClient = null;
-    this.emailTransporter = null;
-    this.initializeEmailTransporter();
-    
-    // Register with circuit breaker for email and SMS services
-    circuitBreakerService.registerService('email', this, {
-      failureThreshold: 3,
-      timeout: 60000, // 1 minute
-      halfOpenSuccessThreshold: 2
-    });
-    
-    circuitBreakerService.registerService('sms', this, {
-      failureThreshold: 3,
-      timeout: 60000, // 1 minute
-      halfOpenSuccessThreshold: 2
-    });
-  }
+    // Resend (email)
+    this.resend = config.resend.apiKey ? new Resend(config.resend.apiKey) : null;
+    if (!this.resend) {
+      logger.warn('RESEND_API_KEY not set — email OTP will be logged to console only');
+    }
 
-  initializeEmailTransporter() {
-    if (config.email.host && config.email.user && config.email.password) {
-      this.emailTransporter = nodemailer.createTransport({
-        host: config.email.host,
-        port: config.email.port,
-        secure: config.email.port === 465,
-        auth: {
-          user: config.email.user,
-          pass: config.email.password,
-        },
-      });
-      logger.info('Email transporter initialized');
-    } else {
-      logger.warn('Email configuration not complete, email OTP will be disabled');
+    // Twilio (SMS)
+    this.twilioClient =
+      config.twilio.accountSid && config.twilio.authToken
+        ? twilio(config.twilio.accountSid, config.twilio.authToken)
+        : null;
+    if (!this.twilioClient) {
+      logger.warn('Twilio credentials not set — SMS OTP will be logged to console only');
     }
   }
 
-  getRedis() {
-    if (!this.redisClient) {
-      this.redisClient = getRedisClient();
-    }
-    return this.redisClient;
-  }
-
-  isRedisAvailable() {
-    return this.getRedis() !== null;
+  generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   async checkRateLimit(identifier) {
-    if (!this.isRedisAvailable()) return true; // skip rate limiting without Redis
-
-    const redis = this.getRedis();
-    const rateLimitKey = `otp:ratelimit:${identifier}`;
-    const count = await redis.get(rateLimitKey);
-    if (count && parseInt(count) >= config.otp.rateLimitMax) {
-      const ttl = await redis.ttl(rateLimitKey);
-      throw new Error(`Too many OTP requests. Please try again in ${Math.ceil(ttl / 60)} minutes`);
+    const windowStart = new Date(Date.now() - config.otp.rateLimitWindow * 1000);
+    const count = await OTP.countDocuments({
+      identifier,
+      createdAt: { $gte: windowStart },
+    });
+    if (count >= config.otp.rateLimitMax) {
+      throw new Error(`Too many OTP requests. Please wait before requesting another.`);
     }
-    const newCount = count ? parseInt(count) + 1 : 1;
-    await redis.setEx(rateLimitKey, config.otp.rateLimitWindow, newCount.toString());
-    return true;
   }
 
   async storeOTP(identifier, otp) {
-    if (!this.isRedisAvailable()) {
-      // Dev fallback: log OTP when Redis is unavailable
-      logger.warn('Redis unavailable — OTP (dev mode)', { identifier, otp });
-      return;
-    }
-    const redis = this.getRedis();
-    const otpKey = `otp:${identifier}`;
-    await redis.setEx(otpKey, config.otp.expirationSeconds, otp);
-    logger.info('OTP stored', { identifier, expiresIn: config.otp.expirationSeconds });
+    // Remove any existing OTPs for this identifier
+    await OTP.deleteMany({ identifier });
+
+    const expiresAt = new Date(Date.now() + config.otp.expirationSeconds * 1000);
+    await OTP.create({ identifier, otp, expiresAt });
+
+    logger.info('OTP stored in MongoDB', { identifier, expiresIn: config.otp.expirationSeconds });
   }
 
   async verifyOTP(identifier, otp) {
-    if (!this.isRedisAvailable()) {
-      // Dev fallback: accept any 6-digit OTP when Redis is unavailable
-      logger.warn('Redis unavailable — accepting OTP without verification (dev mode)', { identifier });
-      return { valid: true };
+    const record = await OTP.findOne({
+      identifier,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!record) {
+      return { valid: false, error: 'OTP expired or not found. Please request a new one.' };
     }
-    const redis = this.getRedis();
-    const otpKey = `otp:${identifier}`;
-    const storedOTP = await redis.get(otpKey);
-    if (!storedOTP) {
-      return { valid: false, error: 'OTP expired or not found' };
-    }
-    if (storedOTP !== otp) {
+
+    if (record.otp !== otp) {
+      // Increment attempt counter
+      await OTP.updateOne({ _id: record._id }, { $inc: { attempts: 1 } });
       return { valid: false, error: 'Invalid OTP' };
     }
-    await redis.del(otpKey);
+
+    // Delete after successful verification (single-use)
+    await OTP.deleteOne({ _id: record._id });
     logger.info('OTP verified successfully', { identifier });
     return { valid: true };
   }
 
   async sendEmailOTP(email, otp) {
-    if (!this.emailTransporter) {
-      logger.error('Email transporter not configured');
-      throw new Error('Email service not available');
-    }
+    const expiryMinutes = Math.floor(config.otp.expirationSeconds / 60);
 
-    try {
-      const mailOptions = {
-        from: config.email.from,
-        to: email,
-        subject: 'Your OTP Code',
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Your OTP Code</h2>
-            <p>Your one-time password is:</p>
-            <h1 style="color: #4CAF50; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
-            <p>This code will expire in ${config.otp.expirationSeconds / 60} minutes.</p>
-            <p>If you didn't request this code, please ignore this email.</p>
-          </div>
-        `,
-      };
-
-      await this.emailTransporter.sendMail(mailOptions);
-      
-      logger.info('Email OTP sent', { email });
-      
-      return { success: true };
-    } catch (error) {
-      logger.error('Failed to send email OTP', {
-        error: error.message,
-        email,
-      });
-      throw new Error('Failed to send email OTP');
-    }
-  }
-
-  /**
-   * Send email OTP with circuit breaker protection
-   * @param {string} email - Email address
-   * @param {string} otp - OTP code
-   * @returns {Promise<Object>} - Result
-   */
-  async sendEmailOTPProtected(email, otp) {
-    return circuitBreakerService.call('email', 'sendEmailOTP', email, otp);
-  }
-
-  async sendSMSOTP(phoneNumber, otp) {
-    if (!config.sms.gatewayUrl || !config.sms.apiKey) {
-      logger.warn('SMS gateway not configured, logging OTP instead');
-      logger.info('SMS OTP (dev mode)', { phoneNumber, otp });
+    if (!this.resend) {
+      // Dev fallback — log to console
+      logger.info(`[DEV] Email OTP for ${email}: ${otp}`);
       return { success: true, devMode: true };
     }
 
-    try {
-      const response = await fetch(config.sms.gatewayUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.sms.apiKey}`,
-        },
-        body: JSON.stringify({
-          to: phoneNumber,
-          message: `Your OTP code is: ${otp}. Valid for ${config.otp.expirationSeconds / 60} minutes.`,
-        }),
-      });
+    const { error } = await this.resend.emails.send({
+      from: config.resend.fromEmail,
+      to: email,
+      subject: 'Your Livo verification code',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px">
+          <h2 style="color:#1a1a1a">Your verification code</h2>
+          <p style="color:#555">Use the code below to verify your identity on Livo.</p>
+          <div style="background:#f4f4f4;border-radius:8px;padding:24px;text-align:center;margin:24px 0">
+            <span style="font-size:36px;font-weight:700;letter-spacing:10px;color:#22c55e">${otp}</span>
+          </div>
+          <p style="color:#888;font-size:13px">This code expires in ${expiryMinutes} minutes. Do not share it with anyone.</p>
+        </div>
+      `,
+    });
 
-      if (!response.ok) {
-        throw new Error(`SMS gateway returned ${response.status}`);
-      }
-
-      logger.info('SMS OTP sent', { phoneNumber });
-      
-      return { success: true };
-    } catch (error) {
-      logger.error('Failed to send SMS OTP', {
-        error: error.message,
-        phoneNumber,
-      });
-      throw new Error('Failed to send SMS OTP');
+    if (error) {
+      logger.error('Resend email failed', { error: error.message, email });
+      throw new Error('Failed to send email OTP');
     }
+
+    logger.info('Email OTP sent via Resend', { email });
+    return { success: true };
   }
 
-  /**
-   * Send SMS OTP with circuit breaker protection
-   * @param {string} phoneNumber - Phone number
-   * @param {string} otp - OTP code
-   * @returns {Promise<Object>} - Result
-   */
-  async sendSMSOTPProtected(phoneNumber, otp) {
-    return circuitBreakerService.call('sms', 'sendSMSOTP', phoneNumber, otp);
+  async sendSMSOTP(phoneNumber, otp) {
+    const expiryMinutes = Math.floor(config.otp.expirationSeconds / 60);
+
+    if (!this.twilioClient) {
+      // Dev fallback — log to console
+      logger.info(`[DEV] SMS OTP for ${phoneNumber}: ${otp}`);
+      return { success: true, devMode: true };
+    }
+
+    await this.twilioClient.messages.create({
+      body: `Your Livo code is: ${otp}. Valid for ${expiryMinutes} minutes. Do not share this code.`,
+      from: config.twilio.phoneNumber,
+      to: phoneNumber,
+    });
+
+    logger.info('SMS OTP sent via Twilio', { phoneNumber });
+    return { success: true };
   }
 
   async sendOTP(type, identifier) {
     await this.checkRateLimit(identifier);
-    
+
     const otp = this.generateOTP();
-    
     await this.storeOTP(identifier, otp);
-    
+
     if (type === 'email') {
-      await this.sendEmailOTPProtected(identifier, otp);
+      await this.sendEmailOTP(identifier, otp);
     } else if (type === 'phone') {
-      await this.sendSMSOTPProtected(identifier, otp);
+      await this.sendSMSOTP(identifier, otp);
     } else {
       throw new Error('Invalid OTP type');
     }
-    
-    return {
-      success: true,
-      expiresIn: config.otp.expirationSeconds,
-    };
+
+    return { success: true, expiresIn: config.otp.expirationSeconds };
   }
 }
 

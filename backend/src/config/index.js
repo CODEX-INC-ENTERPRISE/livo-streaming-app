@@ -11,9 +11,16 @@ const configSchema = Joi.object({
   MONGODB_MIN_POOL_SIZE: Joi.number().default(10),
   MONGODB_MAX_POOL_SIZE: Joi.number().default(100),
   
-  REDIS_HOST: Joi.string().required().description('Redis host'),
+  REDIS_HOST: Joi.string().optional().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
   REDIS_PASSWORD: Joi.string().allow('').optional(),
+  
+  RESEND_API_KEY: Joi.string().optional(),
+  RESEND_FROM_EMAIL: Joi.string().default('noreply@livo.app'),
+
+  TWILIO_ACCOUNT_SID: Joi.string().optional(),
+  TWILIO_AUTH_TOKEN: Joi.string().optional(),
+  TWILIO_PHONE_NUMBER: Joi.string().optional(),
   
   FIREBASE_PROJECT_ID: Joi.string().optional(),
   FIREBASE_PRIVATE_KEY: Joi.string().optional(),
@@ -29,7 +36,7 @@ const configSchema = Joi.object({
   EMAIL_PORT: Joi.number().default(587),
   EMAIL_USER: Joi.string().optional(),
   EMAIL_PASSWORD: Joi.string().optional(),
-  EMAIL_FROM: Joi.string().default('noreply@example.com'),
+  EMAIL_FROM: Joi.string().default('noreply@livo.app'),
   
   SMS_GATEWAY_URL: Joi.string().optional(),
   SMS_GATEWAY_API_KEY: Joi.string().optional(),
@@ -75,6 +82,17 @@ module.exports = {
     host: envVars.REDIS_HOST,
     port: envVars.REDIS_PORT,
     password: envVars.REDIS_PASSWORD,
+  },
+  
+  resend: {
+    apiKey: envVars.RESEND_API_KEY,
+    fromEmail: envVars.RESEND_FROM_EMAIL,
+  },
+
+  twilio: {
+    accountSid: envVars.TWILIO_ACCOUNT_SID,
+    authToken: envVars.TWILIO_AUTH_TOKEN,
+    phoneNumber: envVars.TWILIO_PHONE_NUMBER,
   },
   
   firebase: {
