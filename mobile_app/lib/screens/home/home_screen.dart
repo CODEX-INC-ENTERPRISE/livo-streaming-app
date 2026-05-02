@@ -355,13 +355,6 @@ class _StreamCard extends StatelessWidget {
                 children: [
                   // Background image or dark placeholder
                   Container(color: const Color(0xFF2D2D2D)),
-                  if (stream.agoraChannelId != null)
-                    CachedNetworkImage(
-                      imageUrl: '',
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) =>
-                          Container(color: const Color(0xFF2D2D2D)),
-                    ),
 
                   // Live badge
                   Positioned(

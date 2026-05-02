@@ -54,7 +54,7 @@ class LiveStream {
     final String? hostAvatar = hostIdRaw is Map ? hostIdRaw['profilePictureUrl'] as String? : null;
 
     return LiveStream(
-      id: json['_id'] ?? json['id'] ?? '',
+      id: json['_id'] ?? json['id'] ?? json['streamId'] ?? '',
       hostId: hostId,
       hostName: hostName,
       hostAvatarUrl: hostAvatar,

@@ -83,6 +83,7 @@ class OTPService {
       to: email,
       subject: 'Your Livo verification code',
       html: `
+      <img src = "C:\Users\ejoym\livo-streaming-app\mobile_app\assets\images\home_logo.png">
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px">
           <h2 style="color:#1a1a1a">Your verification code</h2>
           <p style="color:#555">Use the code below to verify your identity on Livo.</p>

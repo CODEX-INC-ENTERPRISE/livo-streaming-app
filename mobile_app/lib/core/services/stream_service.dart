@@ -51,23 +51,28 @@ class StreamService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
+    final appId = EnvConfig.agoraAppId;
+    if (appId.isEmpty || appId == 'YOUR_AGORA_APP_ID') {
+      Logger.warning('Agora App ID not configured — video streaming disabled');
+      return; // Don't throw, just skip
+    }
+
     try {
       _engine = createAgoraRtcEngine();
       await _engine!.initialize(RtcEngineContext(
-        appId: EnvConfig.agoraAppId,
+        appId: appId,
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
       ));
 
       _registerEventHandlers();
-
-      // Enable video module
       await _engine!.enableVideo();
 
       _isInitialized = true;
       Logger.info('Agora RTC engine initialized');
     } catch (e) {
       Logger.error('Failed to initialize Agora engine', e);
-      rethrow;
+      _engine = null;
+      // Don't rethrow — app should work without Agora
     }
   }
 
@@ -121,12 +126,12 @@ class StreamService {
     int uid = 0,
   }) async {
     await _ensureInitialized();
-
+    if (_engine == null) {
+      Logger.warning('Agora not available — broadcasting without video');
+      return;
+    }
     try {
-      // Set role to broadcaster
       await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-      // Configure video encoder: 1280x720, 30fps, 2000kbps
       await _engine!.setVideoEncoderConfiguration(const VideoEncoderConfiguration(
         dimensions: VideoDimensions(width: 1280, height: 720),
         frameRate: 30,
@@ -134,11 +139,7 @@ class StreamService {
         orientationMode: OrientationMode.orientationModeAdaptive,
         degradationPreference: DegradationPreference.maintainQuality,
       ));
-
-      // Enable local video preview
       await _engine!.startPreview();
-
-      // Join channel as broadcaster
       await _engine!.joinChannel(
         token: token,
         channelId: channelId,
@@ -152,7 +153,6 @@ class StreamService {
           autoSubscribeVideo: false,
         ),
       );
-
       Logger.info('Started broadcasting on channel: $channelId');
     } catch (e) {
       Logger.error('Failed to start broadcasting', e);
@@ -171,12 +171,12 @@ class StreamService {
     int uid = 0,
   }) async {
     await _ensureInitialized();
-
+    if (_engine == null) {
+      Logger.warning('Agora not available — watching without video');
+      return;
+    }
     try {
-      // Set role to audience
       await _engine!.setClientRole(role: ClientRoleType.clientRoleAudience);
-
-      // Join channel as audience
       await _engine!.joinChannel(
         token: token,
         channelId: channelId,
@@ -190,7 +190,6 @@ class StreamService {
           autoSubscribeVideo: true,
         ),
       );
-
       Logger.info('Joined stream as viewer on channel: $channelId');
     } catch (e) {
       Logger.error('Failed to join stream as viewer', e);
@@ -201,16 +200,19 @@ class StreamService {
   // ─── Leave Channel ───────────────────────────────────────────────────────────
 
   /// Leave the current Agora channel and stop preview if hosting.
-  Future<void> leaveChannel() async {
+  Future<void> leaveChannel({bool isHost = false}) async {
     if (!_isInitialized || _engine == null) return;
 
     try {
-      await _engine!.stopPreview();
+      // Only stop preview if we were broadcasting (host mode)
+      if (isHost) {
+        try { await _engine!.stopPreview(); } catch (_) {}
+      }
       await _engine!.leaveChannel();
       Logger.info('Left Agora channel');
     } catch (e) {
       Logger.error('Failed to leave Agora channel', e);
-      rethrow;
+      // Don't rethrow — leaving should always succeed from the user's perspective
     }
   }
 

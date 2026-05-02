@@ -9,7 +9,6 @@ import '../../core/utils/logger.dart';
 import '../../models/virtual_gift.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/stream_provider.dart';
-import '../../providers/wallet_provider.dart';
 import '../../widgets/stream/stream_chat_widget.dart';
 import '../../widgets/stream/gift_sheet.dart';
 import '../../widgets/stream/moderation_menu.dart';

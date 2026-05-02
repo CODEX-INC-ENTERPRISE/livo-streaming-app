@@ -102,16 +102,14 @@ class _StreamViewerScreenState extends State<StreamViewerScreen> {
   Future<void> _leaveStream() async {
     setState(() => _isLeaving = true);
     try {
-      await _streamService.leaveChannel();
+      await _streamService.leaveChannel(isHost: false);
       await context.read<LiveStreamProvider>().leaveStream();
       if (mounted) Navigator.pop(context);
     } catch (e) {
       Logger.error('Failed to leave stream', e);
       if (mounted) {
         setState(() => _isLeaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to leave stream')),
-        );
+        Navigator.pop(context); // pop anyway
       }
     }
   }
@@ -129,7 +127,7 @@ class _StreamViewerScreenState extends State<StreamViewerScreen> {
     _remoteJoinedSub?.cancel();
     _remoteOfflineSub?.cancel();
     _giftEventSub?.cancel();
-    _streamService.leaveChannel();
+    _streamService.leaveChannel(isHost: false);
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
   }
