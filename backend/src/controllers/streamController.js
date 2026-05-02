@@ -22,8 +22,10 @@ exports.startStream = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Auto-promote user to host if not already (any authenticated user can stream)
     if (!user.isHost) {
-      return res.status(403).json({ error: 'Host permissions required' });
+      user.isHost = true;
+      await user.save();
     }
 
     // Check if host already has an active stream

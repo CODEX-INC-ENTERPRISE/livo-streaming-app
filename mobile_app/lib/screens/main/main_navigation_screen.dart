@@ -21,13 +21,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void _onTabTapped(int index) => setState(() => _currentIndex = index);
 
   void _onFabTapped() {
-    final isHost =
-        context.read<AuthProvider>().currentUser?.isHost ?? false;
-    if (isHost) {
+    final isLoggedIn = context.read<AuthProvider>().isAuthenticated;
+    if (isLoggedIn) {
       _showStartStreamDialog();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Become a host to start streaming')),
+        const SnackBar(content: Text('Please log in to start streaming')),
       );
     }
   }

@@ -27,14 +27,16 @@ class AuthProvider extends ChangeNotifier {
         final userData = await _authService.getCurrentUser();
         if (userData != null) {
           _currentUser = User(
-            id: userData['id'] ?? '',
+            id: userData['id'] ?? userData['_id'] ?? '',
             displayName: userData['displayName'] ?? 'User',
-            registeredAt: DateTime.now(),
-            isBlocked: false,
-            isHost: false,
-            followerIds: const [],
-            followingIds: const [],
-            blockedUserIds: const [],
+            registeredAt: userData['registeredAt'] != null
+                ? DateTime.tryParse(userData['registeredAt'].toString()) ?? DateTime.now()
+                : DateTime.now(),
+            isBlocked: userData['isBlocked'] ?? false,
+            isHost: userData['isHost'] ?? false,
+            followerIds: List<String>.from(userData['followerIds'] ?? []),
+            followingIds: List<String>.from(userData['followingIds'] ?? []),
+            blockedUserIds: List<String>.from(userData['blockedUserIds'] ?? []),
           );
         }
       }
