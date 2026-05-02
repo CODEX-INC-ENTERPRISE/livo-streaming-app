@@ -551,10 +551,11 @@ exports.getActiveVoiceRooms = async (req, res, next) => {
 
     const total = await VoiceRoom.countDocuments({ status: 'active' });
 
-    // Add participant count to each room
     const roomsWithParticipantCount = voiceRooms.map((room) => ({
       ...room,
-      participantCount: room.participants.length,
+      id: room._id,
+      participantCount: room.participants ? room.participants.length : 0,
+      chatHistory: [], // omit chat history from list view
     }));
 
     res.json({

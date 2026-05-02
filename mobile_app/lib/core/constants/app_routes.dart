@@ -6,6 +6,7 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/otp_verification_screen.dart';
 import '../../screens/auth/signup_screen.dart';
 import '../../screens/main/main_navigation_screen.dart';
+import '../../screens/discover/discover_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/followers_screen.dart';
@@ -87,6 +88,7 @@ class AppRoutes {
         signup: (_) => const SignUpScreen(),
         // Main app shell – hosts the bottom nav and all tabs
         home: (_) => const MainNavigationScreen(),
+        discover: (_) => const DiscoverScreen(),
         // The routes below are placeholders for screens not yet implemented.
         // They will be replaced with real screen widgets as development
         // progresses (tasks 22+).

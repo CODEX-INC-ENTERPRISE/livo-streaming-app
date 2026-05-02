@@ -1,10 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' hide StreamProvider;
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/stream.dart';
 import '../../providers/stream_provider.dart';
-import '../../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,7 +13,9 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   static const int _pageSize = 20;
   int _page = 1;
@@ -22,24 +24,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadInitial() async {
     _page = 1;
-    await context.read<LiveStreamProvider>().loadActiveStreams(page: _page, limit: _pageSize);
+    await context
+        .read<LiveStreamProvider>()
+        .loadActiveStreams(page: _page, limit: _pageSize);
   }
 
   Future<void> _onRefresh() async {
     _page = 1;
-    await context.read<LiveStreamProvider>().loadActiveStreams(page: _page, limit: _pageSize, refresh: true);
+    await context
+        .read<LiveStreamProvider>()
+        .loadActiveStreams(page: _page, limit: _pageSize, refresh: true);
   }
 
   void _onScroll() {
@@ -47,130 +55,252 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.read<LiveStreamProvider>();
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      if (provider.hasMore && !provider.isLoading) {
-        _fetchNextPage();
-      }
+      if (provider.hasMore && !provider.isLoading) _fetchNextPage();
     }
   }
 
   Future<void> _fetchNextPage() async {
     setState(() => _isFetchingMore = true);
     _page++;
-    await context.read<LiveStreamProvider>().loadActiveStreams(page: _page, limit: _pageSize);
+    await context
+        .read<LiveStreamProvider>()
+        .loadActiveStreams(page: _page, limit: _pageSize);
     if (mounted) setState(() => _isFetchingMore = false);
   }
 
   void _joinStream(LiveStream stream) {
-    Navigator.pushNamed(context, AppRoutes.streamView, arguments: stream);
-  }
-
-  void _showStartStreamDialog() {
-    final titleController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Start Streaming'),
-        content: TextField(
-          controller: titleController,
-          decoration: const InputDecoration(
-            labelText: 'Stream Title',
-            hintText: 'Enter a title for your stream',
-          ),
-          maxLength: 100,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final title = titleController.text.trim();
-              if (title.isEmpty) return;
-              Navigator.pop(ctx);
-              try {
-                final stream = await context.read<LiveStreamProvider>().startStream(title);
-                if (mounted) {
-                  Navigator.pushNamed(context, AppRoutes.streamStart, arguments: stream);
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to start stream: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-    );
+    Navigator.pushNamed(context, AppRoutes.streamView, arguments: stream.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final streamProvider = context.watch<LiveStreamProvider>();
-    final authProvider = context.watch<AuthProvider>();
-    final isHost = authProvider.currentUser?.isHost ?? false;
+    final provider = context.watch<LiveStreamProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Streams'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: 'Notifications',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
-          ),
-        ],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Top bar ──────────────────────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  // Logo
+                  Image.asset(
+                    'assets/images/home_logo.png',
+                    height: 32,
+                    errorBuilder: (_, __, ___) => RichText(
+                      text: const TextSpan(
+                        children: [
+                          WidgetSpan(
+                            child: Icon(Icons.play_arrow,
+                                color: AppColors.primaryGreen, size: 28),
+                          ),
+                          TextSpan(
+                            text: ' livo',
+                            style: TextStyle(
+                              color: AppColors.primaryGreen,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'PlusJakartaSans',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Search button — navigates to discover tab via bottom nav
+                  _IconCircleButton(
+                    icon: Icons.search,
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.discover),
+                  ),
+                  const SizedBox(width: 10),
+                  // Notification button
+                  _IconCircleButton(
+                    icon: Icons.notifications_outlined,
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.notifications),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Tab bar ──────────────────────────────────────────────────────
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.textPrimary,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: const TextStyle(
+                fontFamily: 'PlusJakartaSans',
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: 'PlusJakartaSans',
+                fontWeight: FontWeight.w400,
+                fontSize: 15,
+              ),
+              indicatorColor: AppColors.primaryGreen,
+              indicatorWeight: 2.5,
+              indicatorSize: TabBarIndicatorSize.label,
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Following'),
+                Tab(text: 'For You'),
+              ],
+            ),
+
+            // ── Content ──────────────────────────────────────────────────────
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Following tab
+                  _StreamGrid(
+                    provider: provider,
+                    scrollController: _scrollController,
+                    isFetchingMore: _isFetchingMore,
+                    onRefresh: _onRefresh,
+                    onStreamTap: _joinStream,
+                    onLoadInitial: _loadInitial,
+                  ),
+                  // For You tab — same data for now
+                  _StreamGrid(
+                    provider: provider,
+                    scrollController: ScrollController(),
+                    isFetchingMore: false,
+                    onRefresh: _onRefresh,
+                    onStreamTap: _joinStream,
+                    onLoadInitial: _loadInitial,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        color: AppColors.primaryGreen,
-        child: _buildBody(streamProvider),
-      ),
-      floatingActionButton: isHost
-          ? FloatingActionButton(
-              onPressed: _showStartStreamDialog,
-              backgroundColor: AppColors.primaryGreen,
-              tooltip: 'Start Stream',
-              child: const Icon(Icons.videocam, color: AppColors.white),
-            )
-          : null,
     );
   }
+}
 
-  Widget _buildBody(LiveStreamProvider provider) {
+// ─── Icon Circle Button ───────────────────────────────────────────────────────
+
+class _IconCircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _IconCircleButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.mediumGrey, width: 1),
+        ),
+        child: Icon(icon, size: 20, color: AppColors.textPrimary),
+      ),
+    );
+  }
+}
+
+// ─── Stream Grid ──────────────────────────────────────────────────────────────
+
+class _StreamGrid extends StatelessWidget {
+  final LiveStreamProvider provider;
+  final ScrollController scrollController;
+  final bool isFetchingMore;
+  final Future<void> Function() onRefresh;
+  final void Function(LiveStream) onStreamTap;
+  final Future<void> Function() onLoadInitial;
+
+  const _StreamGrid({
+    required this.provider,
+    required this.scrollController,
+    required this.isFetchingMore,
+    required this.onRefresh,
+    required this.onStreamTap,
+    required this.onLoadInitial,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     if (provider.isLoading && provider.activeStreams.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null && provider.activeStreams.isEmpty) {
-      return _ErrorView(message: provider.error!, onRetry: _loadInitial);
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 56, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text(provider.error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+                onPressed: onLoadInitial, child: const Text('Retry')),
+          ],
+        ),
+      );
     }
 
     if (provider.activeStreams.isEmpty) {
-      return _EmptyView(onStartStream: _showStartStreamDialog);
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        color: AppColors.primaryGreen,
+        child: ListView(
+          children: const [
+            SizedBox(height: 120),
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.videocam_off_outlined,
+                      size: 64, color: AppColors.mediumGrey),
+                  SizedBox(height: 12),
+                  Text('No live streams right now',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: provider.activeStreams.length + (_isFetchingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == provider.activeStreams.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.primaryGreen,
+      child: GridView.builder(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.62,
+        ),
+        itemCount:
+            provider.activeStreams.length + (isFetchingMore ? 2 : 0),
+        itemBuilder: (context, index) {
+          if (index >= provider.activeStreams.length) {
+            return const SizedBox.shrink();
+          }
+          final stream = provider.activeStreams[index];
+          return _StreamCard(
+            stream: stream,
+            onTap: () => onStreamTap(stream),
           );
-        }
-        return _StreamCard(
-          stream: provider.activeStreams[index],
-          onTap: () => _joinStream(provider.activeStreams[index]),
-        );
-      },
+        },
+      ),
     );
   }
 }
@@ -185,272 +315,188 @@ class _StreamCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Thumbnail
+        Expanded(
+          child: GestureDetector(
+            onTap: onTap,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Background image or dark placeholder
+                  Container(color: const Color(0xFF2D2D2D)),
+                  if (stream.agoraChannelId != null)
+                    CachedNetworkImage(
+                      imageUrl: '',
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) =>
+                          Container(color: const Color(0xFF2D2D2D)),
+                    ),
+
+                  // Live badge
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.liveRed,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Live',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Viewer count
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withAlpha(140),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.visibility,
+                              size: 11, color: Colors.white),
+                          const SizedBox(width: 3),
+                          Text(
+                            _formatCount(stream.currentViewerCount),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Title overlay at bottom
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Colors.black87, Colors.transparent],
+                        ),
+                      ),
+                      child: Text(
+                        stream.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Host info row
+        Row(
           children: [
-            _StreamThumbnail(stream: stream),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: _StreamInfo(stream: stream),
+            // Host avatar
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.lightGrey,
+              child: const Icon(Icons.person,
+                  size: 16, color: AppColors.grey),
+            ),
+            const SizedBox(width: 6),
+            // Host name + followers
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _shortHostName(stream.hostId),
+                    style: const TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${_formatCount(stream.peakViewerCount)} Followers',
+                    style: const TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Watch Live button
+            GestureDetector(
+              onTap: onTap,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Watch\nLive',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _StreamThumbnail extends StatelessWidget {
-  final LiveStream stream;
-
-  const _StreamThumbnail({required this.stream});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Thumbnail image or placeholder
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            color: AppColors.darkBackground,
-            child: const Center(
-              child: Icon(Icons.videocam, size: 48, color: AppColors.mediumGrey),
-            ),
-          ),
-        ),
-        // LIVE badge
-        Positioned(
-          top: 8,
-          left: 8,
-          child: _LiveBadge(),
-        ),
-        // Viewer count overlay
-        Positioned(
-          bottom: 8,
-          right: 8,
-          child: _ViewerCountBadge(count: stream.currentViewerCount),
-        ),
       ],
-    );
-  }
-}
-
-class _LiveBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.liveRed,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.circle, size: 6, color: AppColors.white),
-          SizedBox(width: 4),
-          Text(
-            'LIVE',
-            style: TextStyle(
-              color: AppColors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViewerCountBadge extends StatelessWidget {
-  final int count;
-
-  const _ViewerCountBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.black.withAlpha(153),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.visibility, size: 12, color: AppColors.white),
-          const SizedBox(width: 4),
-          Text(
-            _formatCount(count),
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   String _formatCount(int count) {
+    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
     if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}k';
     return count.toString();
   }
-}
 
-class _StreamInfo extends StatelessWidget {
-  final LiveStream stream;
-
-  const _StreamInfo({required this.stream});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Host avatar
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: AppColors.lightGrey,
-          child: const Icon(Icons.person, color: AppColors.grey, size: 22),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Stream title
-              Text(
-                stream.title,
-                style: theme.textTheme.labelLarge,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              // Host name (abbreviated ID until host profiles are loaded)
-              Text(
-                'Host · ${_shortId(stream.hostId)}',
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 4),
-              // Stats row
-              Row(
-                children: [
-                  Icon(Icons.people_outline, size: 13, color: AppColors.textSecondary),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${stream.currentViewerCount} watching',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(Icons.card_giftcard_outlined, size: 13, color: AppColors.giftGold),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${stream.totalGiftsReceived} gifts',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const Spacer(),
-                  Text(
-                    _formatDuration(stream.duration),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _shortId(String id) => id.length > 8 ? id.substring(0, 8) : id;
-
-  String _formatDuration(Duration d) {
-    if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes.remainder(60)}m';
-    return '${d.inMinutes}m';
-  }
-}
-
-// ─── Empty / Error States ─────────────────────────────────────────────────────
-
-class _EmptyView extends StatelessWidget {
-  final VoidCallback onStartStream;
-
-  const _EmptyView({required this.onStartStream});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.videocam_off_outlined, size: 72, color: AppColors.mediumGrey),
-            const SizedBox(height: 16),
-            Text(
-              'No live streams right now',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pull down to refresh or be the first to go live.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 72, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.error,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
+  String _shortHostName(String hostId) {
+    if (hostId.length > 10) return 'Host ${hostId.substring(0, 6)}';
+    return 'Host $hostId';
   }
 }
