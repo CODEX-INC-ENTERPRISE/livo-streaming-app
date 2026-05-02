@@ -13,12 +13,12 @@ const paginationSchema = Joi.object({
 
 // Authentication schemas
 const sendOTPSchema = Joi.object({
-  phoneNumber: Joi.string().pattern(phoneNumberPattern).optional(),
+  phoneNumber: Joi.string().min(7).max(16).optional(),
   email: Joi.string().pattern(emailPattern).optional(),
 }).xor('phoneNumber', 'email');
 
 const registerSchema = Joi.object({
-  phoneNumber: Joi.string().pattern(phoneNumberPattern).optional(),
+  phoneNumber: Joi.string().min(7).max(16).optional(),
   email: Joi.string().pattern(emailPattern).optional(),
   password: Joi.string().min(8).max(100).optional(),
   displayName: Joi.string().min(3).max(30).required(),
@@ -26,35 +26,36 @@ const registerSchema = Joi.object({
   socialProvider: Joi.string().valid('google', 'facebook', 'apple').optional(),
   firebaseToken: Joi.string().optional(),
 }).custom((value, helpers) => {
-  // Validate registration method
-  const { phoneNumber, email, socialProvider, firebaseToken, otp, password } = value;
-  
+  const { phoneNumber, email, socialProvider, firebaseToken, otp } = value;
   if (socialProvider && firebaseToken) {
-    // Social registration
-    if (otp) {
-      return helpers.error('any.invalid', { message: 'OTP not needed for social registration' });
-    }
+    // Social registration — no OTP needed
   } else if (phoneNumber || email) {
-    // Phone/email registration
     if (!otp) {
       return helpers.error('any.required', { message: 'OTP is required for phone/email registration' });
     }
-    if (!password) {
-      return helpers.error('any.required', { message: 'Password is required for phone/email registration' });
-    }
+    // Password is optional — OTP-only registration is supported
   } else {
     return helpers.error('any.required', { message: 'Registration method not provided' });
   }
-  
   return value;
 });
 
 const loginSchema = Joi.object({
-  phoneNumber: Joi.string().pattern(phoneNumberPattern).optional(),
+  phoneNumber: Joi.string().min(7).max(16).optional(),
   email: Joi.string().pattern(emailPattern).optional(),
   password: Joi.string().min(8).max(100).optional(),
+  otp: Joi.string().length(6).optional(),
   firebaseToken: Joi.string().optional(),
-}).xor('phoneNumber', 'email', 'firebaseToken');
+}).custom((value, helpers) => {
+  const { phoneNumber, email, password, otp, firebaseToken } = value;
+  if (!firebaseToken && !phoneNumber && !email) {
+    return helpers.error('any.required', { message: 'Login method not provided' });
+  }
+  if ((phoneNumber || email) && !password && !otp) {
+    return helpers.error('any.required', { message: 'Either password or OTP is required' });
+  }
+  return value;
+});
 
 // User schemas
 const updateProfileSchema = Joi.object({
