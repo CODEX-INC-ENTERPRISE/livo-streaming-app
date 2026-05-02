@@ -28,7 +28,8 @@ class AgoraService {
    */
   async generateHostToken(channelName, uid = 0) {
     if (!this.appId || !this.appCertificate) {
-      throw new Error('Agora credentials not configured');
+      logger.warn('Agora credentials not configured, returning placeholder token');
+      return 'agora_token_not_configured';
     }
 
     const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -55,7 +56,8 @@ class AgoraService {
    */
   async generateViewerToken(channelName, uid = 0) {
     if (!this.appId || !this.appCertificate) {
-      throw new Error('Agora credentials not configured');
+      logger.warn('Agora credentials not configured, returning placeholder token');
+      return 'agora_token_not_configured';
     }
 
     const currentTimestamp = Math.floor(Date.now() / 1000);

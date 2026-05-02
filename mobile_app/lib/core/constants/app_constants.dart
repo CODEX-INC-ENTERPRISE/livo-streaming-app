@@ -73,7 +73,7 @@ class AppConstants {
   static const int splashDuration = 2;
 
   /// Default HTTP request timeout in seconds.
-  static const int apiTimeoutSeconds = 30;
+  static const int apiTimeoutSeconds = 60;
 
   /// OTP expiry in seconds (must match backend setting).
   static const int otpExpirySeconds = 300;
