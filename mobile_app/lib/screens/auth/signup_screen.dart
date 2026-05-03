@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/api_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 
@@ -74,6 +75,18 @@ class _SignUpScreenState extends State<SignUpScreen>
         _pendingContact = contact;
       });
       _showSnack('OTP sent to $contact');
+    } on ApiException catch (e) {
+      if (e.statusCode == 409) {
+        _showSnack(
+          'An account already exists with this ${_isPhone ? 'phone number' : 'email'}.',
+          action: SnackBarAction(
+            label: 'Log In',
+            onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+          ),
+        );
+      } else {
+        _showSnack(e.message);
+      }
     } catch (e) {
       _showSnack(auth.error ?? 'Failed to send OTP');
     }
@@ -93,8 +106,21 @@ class _SignUpScreenState extends State<SignUpScreen>
         await auth.registerWithEmail(_pendingContact, otp, displayName);
       }
       if (mounted) Navigator.pushReplacementNamed(context, '/home');
+    } on ApiException catch (e) {
+      if (e.statusCode == 409) {
+        // Account already exists — guide them to login
+        _showSnack(
+          'An account with this ${_isPhone ? 'phone number' : 'email'} already exists.',
+          action: SnackBarAction(
+            label: 'Log In',
+            onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+          ),
+        );
+      } else {
+        _showSnack(e.message);
+      }
     } catch (e) {
-      _showSnack(auth.error ?? 'Registration failed');
+      _showSnack(auth.error ?? 'Registration failed. Please try again.');
     }
   }
 
@@ -118,10 +144,10 @@ class _SignUpScreenState extends State<SignUpScreen>
     }
   }
 
-  void _showSnack(String msg) {
+  void _showSnack(String msg, {SnackBarAction? action}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+        .showSnackBar(SnackBar(content: Text(msg), action: action));
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────────

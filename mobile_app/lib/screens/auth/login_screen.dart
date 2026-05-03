@@ -57,15 +57,27 @@ class _LoginScreenState extends State<LoginScreen>
 
     try {
       if (_isPhone) {
-        await auth.verifyPhoneNumber(contact);
+        await auth.verifyPhoneNumber(contact, purpose: 'login');
       } else {
-        await auth.sendEmailOtp(contact);
+        await auth.sendEmailOtp(contact, purpose: 'login');
       }
       setState(() {
         _otpSent = true;
         _pendingContact = contact;
       });
       _showSnack('OTP sent to $contact');
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        _showSnack(
+          'No account found. Please sign up first.',
+          action: SnackBarAction(
+            label: 'Sign Up',
+            onPressed: () => Navigator.pushReplacementNamed(context, '/signup'),
+          ),
+        );
+      } else {
+        _showSnack(e.message);
+      }
     } catch (e) {
       _showSnack(auth.error ?? 'Failed to send OTP');
     }
@@ -89,12 +101,14 @@ class _LoginScreenState extends State<LoginScreen>
       if (mounted) Navigator.pushReplacementNamed(context, '/home');
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        _showSnack('No account found. Please sign up first.',
-            action: SnackBarAction(
-              label: 'Sign Up',
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, '/signup'),
-            ));
+        _showSnack(
+          'No account found. Please sign up first.',
+          action: SnackBarAction(
+            label: 'Sign Up',
+            onPressed: () =>
+                Navigator.pushReplacementNamed(context, '/signup'),
+          ),
+        );
       } else {
         _showSnack(e.message);
       }

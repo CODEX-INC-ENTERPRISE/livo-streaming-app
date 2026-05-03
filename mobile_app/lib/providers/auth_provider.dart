@@ -51,15 +51,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
+  Future<void> verifyPhoneNumber(String phoneNumber, {String purpose = 'login'}) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      await _authService.verifyPhoneNumber(phoneNumber);
+      await _authService.verifyPhoneNumber(phoneNumber, purpose: purpose);
     } catch (e) {
       Logger.error('Phone verification failed', e);
-      _error = 'Failed to verify phone number';
+      _error = e is ApiException ? e.message : 'Failed to verify phone number';
       rethrow;
     } finally {
       _isLoading = false;
@@ -74,6 +74,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       final result = await _authService.verifyPhoneOtp(phoneNumber, otp);
       await _handleAuthSuccess(result);
+    } on ApiException catch (e) {
+      Logger.error('Phone OTP verification failed', e);
+      _error = e.message;
+      rethrow;
     } catch (e) {
       Logger.error('Phone OTP verification failed', e);
       _error = 'Invalid OTP or verification failed';
@@ -84,15 +88,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> sendEmailOtp(String email) async {
+  Future<void> sendEmailOtp(String email, {String purpose = 'login'}) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
-      await _authService.sendEmailOtp(email);
+      await _authService.sendEmailOtp(email, purpose: purpose);
     } catch (e) {
       Logger.error('Email OTP sending failed', e);
-      _error = 'Failed to send OTP to email';
+      _error = e is ApiException ? e.message : 'Failed to send OTP to email';
       rethrow;
     } finally {
       _isLoading = false;
@@ -107,6 +111,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       final result = await _authService.verifyEmailOtp(email, otp);
       await _handleAuthSuccess(result);
+    } on ApiException catch (e) {
+      Logger.error('Email OTP verification failed', e);
+      _error = e.message;
+      rethrow;
     } catch (e) {
       Logger.error('Email OTP verification failed', e);
       _error = 'Invalid OTP or verification failed';
@@ -126,12 +134,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Send OTP to phone or email (used by signup screen).
+  /// Send OTP to phone or email (used by signup screen — purpose is 'register').
   Future<void> sendOtp(String contact, {required bool isPhone}) async {
     if (isPhone) {
-      await verifyPhoneNumber(contact);
+      await verifyPhoneNumber(contact, purpose: 'register');
     } else {
-      await sendEmailOtp(contact);
+      await sendEmailOtp(contact, purpose: 'register');
     }
   }
 
@@ -143,6 +151,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       final result = await _authService.registerWithPhone(phoneNumber, otp, displayName);
       await _handleAuthSuccess(result);
+    } on ApiException catch (e) {
+      Logger.error('Phone registration failed', e);
+      _error = e.message;
+      rethrow;
     } catch (e) {
       Logger.error('Phone registration failed', e);
       _error = 'Registration failed';
@@ -161,6 +173,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       final result = await _authService.registerWithEmail(email, otp, displayName);
       await _handleAuthSuccess(result);
+    } on ApiException catch (e) {
+      Logger.error('Email registration failed', e);
+      _error = e.message;
+      rethrow;
     } catch (e) {
       Logger.error('Email registration failed', e);
       _error = 'Registration failed';

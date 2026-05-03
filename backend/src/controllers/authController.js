@@ -14,7 +14,7 @@ class ValidationError extends Error {
 
 const sendOTP = async (req, res, next) => {
   try {
-    const { phoneNumber, email } = req.body;
+    const { phoneNumber, email, purpose } = req.body;
 
     if (!phoneNumber && !email) {
       throw new ValidationError('Either phoneNumber or email is required');
@@ -27,12 +27,25 @@ const sendOTP = async (req, res, next) => {
     const type = phoneNumber ? 'phone' : 'email';
     const identifier = phoneNumber || email;
 
+    // For login flow: verify the user actually exists before sending OTP
+    if (purpose === 'login') {
+      const existingUser = await User.findOne({
+        $or: [
+          ...(phoneNumber ? [{ phoneNumber }] : []),
+          ...(email ? [{ email }] : []),
+        ],
+      });
+      if (!existingUser) {
+        return res.status(404).json({
+          error: 'No account found with this phone number or email. Please sign up first.',
+          code: 'USER_NOT_FOUND',
+        });
+      }
+    }
+
     const result = await otpService.sendOTP(type, identifier);
 
-    logger.info('OTP sent', {
-      type,
-      identifier,
-    });
+    logger.info('OTP sent', { type, identifier, purpose: purpose || 'register' });
 
     return res.status(200).json({
       success: true,
@@ -80,20 +93,53 @@ const register = async (req, res, next) => {
       
       const existingUser = await User.findOne({
         $or: [
-          { email: decodedToken.email },
-          { phoneNumber: decodedToken.phone_number },
+          ...(decodedToken.email ? [{ email: decodedToken.email }] : []),
+          ...(decodedToken.phone_number ? [{ phoneNumber: decodedToken.phone_number }] : []),
           { socialProviderId: decodedToken.uid },
         ],
       });
 
       if (existingUser) {
-        throw new ValidationError('User already registered with this social account');
+        // Social account already exists — treat as login, not an error
+        if (existingUser.isBlocked) {
+          throw new ValidationError('Account is blocked. Please contact support.');
+        }
+        existingUser.lastLoginAt = new Date();
+        await existingUser.save();
+        const token = generateJWT({
+          userId: existingUser._id.toString(),
+          isHost: existingUser.isHost,
+          isAdmin: existingUser.isAdmin,
+        });
+        logger.info('Social user logged in (existing account)', { userId: existingUser._id });
+        return res.status(200).json({
+          userId: existingUser._id,
+          token,
+          user: existingUser.toJSON(),
+        });
       }
     } else if (phoneNumber || email) {
       const identifier = phoneNumber || email;
       
       if (!otp) {
         throw new ValidationError('OTP is required for phone/email registration');
+      }
+
+      // Check for existing user BEFORE consuming the OTP
+      const existingUser = await User.findOne({
+        $or: [
+          ...(phoneNumber ? [{ phoneNumber }] : []),
+          ...(email ? [{ email }] : []),
+        ],
+      });
+
+      if (existingUser) {
+        // Consume the OTP so it can't be reused, then return a helpful error
+        await otpService.verifyOTP(identifier, otp).catch(() => {});
+        return res.status(409).json({
+          error: 'An account with this phone number or email already exists. Please log in instead.',
+          code: 'USER_ALREADY_EXISTS',
+        });
       }
 
       const otpVerification = await otpService.verifyOTP(identifier, otp);
@@ -103,17 +149,6 @@ const register = async (req, res, next) => {
       }
 
       verifiedIdentifier = identifier;
-
-      const existingUser = await User.findOne({
-        $or: [
-          { phoneNumber: phoneNumber },
-          { email: email },
-        ],
-      });
-
-      if (existingUser) {
-        throw new ValidationError('User already registered with this phone number or email');
-      }
 
       // Password is optional for OTP-only registration
     } else {
@@ -212,17 +247,22 @@ const login = async (req, res, next) => {
         throw new ValidationError('User not found. Please register first.');
       }
     } else if ((phoneNumber || email) && req.body.otp) {
-      // OTP-based login (passwordless)
+      // OTP-based login (passwordless) — check user exists before consuming OTP
       const identifier = phoneNumber || email;
-      const otpVerification = await otpService.verifyOTP(identifier, req.body.otp);
-      if (!otpVerification.valid) {
-        throw new ValidationError(otpVerification.error || 'Invalid OTP');
-      }
       user = await User.findOne({
         $or: [{ phoneNumber: phoneNumber }, { email: email }],
       });
       if (!user) {
-        throw new ValidationError('User not found. Please register first.');
+        // Consume the OTP so it can't be reused, then return a clear error
+        await otpService.verifyOTP(identifier, req.body.otp).catch(() => {});
+        return res.status(404).json({
+          error: 'No account found with this phone number or email. Please sign up first.',
+          code: 'USER_NOT_FOUND',
+        });
+      }
+      const otpVerification = await otpService.verifyOTP(identifier, req.body.otp);
+      if (!otpVerification.valid) {
+        throw new ValidationError(otpVerification.error || 'Invalid OTP');
       }
     } else if (phoneNumber || email) {
       if (!password) {

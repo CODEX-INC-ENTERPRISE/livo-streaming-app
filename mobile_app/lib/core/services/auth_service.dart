@@ -62,13 +62,13 @@ class AuthService {
 
   // ─── Phone authentication ─────────────────────────────────────────────────────
 
-  /// Sends an OTP to [phoneNumber] via the backend.
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
+  /// Sends an OTP to [phoneNumber] via the backend for login.
+  Future<void> verifyPhoneNumber(String phoneNumber, {String purpose = 'login'}) async {
     try {
       Logger.debug('Sending phone OTP to: $phoneNumber');
       await _apiService.post(
         AppConstants.sendOtpEndpoint,
-        data: {'phoneNumber': phoneNumber},
+        data: {'phoneNumber': phoneNumber, 'purpose': purpose},
       );
     } catch (e) {
       Logger.error('Failed to send phone OTP', e);
@@ -96,13 +96,13 @@ class AuthService {
 
   // ─── Email authentication ─────────────────────────────────────────────────────
 
-  /// Sends an OTP to [email] via the backend.
-  Future<void> sendEmailOtp(String email) async {
+  /// Sends an OTP to [email] via the backend for login.
+  Future<void> sendEmailOtp(String email, {String purpose = 'login'}) async {
     try {
       Logger.debug('Sending email OTP to: $email');
       await _apiService.post(
         AppConstants.sendOtpEndpoint,
-        data: {'email': email},
+        data: {'email': email, 'purpose': purpose},
       );
     } catch (e) {
       Logger.error('Failed to send email OTP', e);
