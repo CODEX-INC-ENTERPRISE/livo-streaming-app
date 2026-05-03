@@ -23,28 +23,42 @@ class AuthProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
-      final authenticated = await _authService.isAuthenticated();
-      if (authenticated) {
-        final userData = await _authService.getCurrentUser();
-        if (userData != null) {
-          _currentUser = User(
-            id: userData['id'] ?? userData['_id'] ?? '',
-            displayName: userData['displayName'] ?? 'User',
-            registeredAt: userData['registeredAt'] != null
-                ? DateTime.tryParse(userData['registeredAt'].toString()) ?? DateTime.now()
-                : DateTime.now(),
-            isBlocked: userData['isBlocked'] ?? false,
-            isHost: userData['isHost'] ?? false,
-            followerIds: List<String>.from(userData['followerIds'] ?? []),
-            followingIds: List<String>.from(userData['followingIds'] ?? []),
-            blockedUserIds: List<String>.from(userData['blockedUserIds'] ?? []),
-          );
-        }
+
+      final token = await _authService.getCurrentToken();
+      if (token == null) {
+        // No token — not logged in
+        _currentUser = null;
+        _error = null;
+        return;
       }
+
+      // Token exists — validate it by fetching the current user from the backend.
+      // This prevents stale/wrong user data from a previous session being used.
+      try {
+        final apiService = ApiService();
+        apiService.setAuthToken(token);
+        final response = await apiService.get<Map<String, dynamic>>('/users/me');
+        final userData = response.data;
+        if (userData != null) {
+          _currentUser = User.fromJson(userData);
+          await _storageService.setCurrentUser(userData);
+        } else {
+          // Bad response — clear session
+          await _authService.logout();
+          _currentUser = null;
+        }
+      } catch (e) {
+        // Token is invalid or expired — clear everything
+        Logger.error('Token validation failed on init, clearing session', e);
+        await _storageService.clearAll();
+        _currentUser = null;
+      }
+
       _error = null;
     } catch (e) {
       Logger.error('Failed to initialize auth provider', e);
-      _error = 'Failed to initialize authentication';
+      _error = null;
+      _currentUser = null;
     } finally {
       _isLoading = false;
       notifyListeners();

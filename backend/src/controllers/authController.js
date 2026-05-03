@@ -29,12 +29,9 @@ const sendOTP = async (req, res, next) => {
 
     // For login flow: verify the user actually exists before sending OTP
     if (purpose === 'login') {
-      const existingUser = await User.findOne({
-        $or: [
-          ...(phoneNumber ? [{ phoneNumber }] : []),
-          ...(email ? [{ email }] : []),
-        ],
-      });
+      // Use a precise single-field query — $or with undefined fields matches nulls in MongoDB
+      const query = phoneNumber ? { phoneNumber } : { email };
+      const existingUser = await User.findOne(query);
       if (!existingUser) {
         return res.status(404).json({
           error: 'No account found with this phone number or email. Please sign up first.',
@@ -91,13 +88,10 @@ const register = async (req, res, next) => {
       const decodedToken = await verifyFirebaseToken(firebaseToken);
       verifiedIdentifier = decodedToken.email || decodedToken.phone_number;
       
-      const existingUser = await User.findOne({
-        $or: [
-          ...(decodedToken.email ? [{ email: decodedToken.email }] : []),
-          ...(decodedToken.phone_number ? [{ phoneNumber: decodedToken.phone_number }] : []),
-          { socialProviderId: decodedToken.uid },
-        ],
-      });
+      const socialQuery = { $or: [{ socialProviderId: decodedToken.uid }] };
+      if (decodedToken.email) socialQuery.$or.push({ email: decodedToken.email });
+      if (decodedToken.phone_number) socialQuery.$or.push({ phoneNumber: decodedToken.phone_number });
+      const existingUser = await User.findOne(socialQuery);
 
       if (existingUser) {
         // Social account already exists — treat as login, not an error
@@ -126,12 +120,9 @@ const register = async (req, res, next) => {
       }
 
       // Check for existing user BEFORE consuming the OTP
-      const existingUser = await User.findOne({
-        $or: [
-          ...(phoneNumber ? [{ phoneNumber }] : []),
-          ...(email ? [{ email }] : []),
-        ],
-      });
+      // Use a precise single-field query — $or with undefined fields matches nulls in MongoDB
+      const query = phoneNumber ? { phoneNumber } : { email };
+      const existingUser = await User.findOne(query);
 
       if (existingUser) {
         // Consume the OTP so it can't be reused, then return a helpful error
@@ -235,13 +226,10 @@ const login = async (req, res, next) => {
     if (firebaseToken) {
       const decodedToken = await verifyFirebaseToken(firebaseToken);
       
-      user = await User.findOne({
-        $or: [
-          { socialProviderId: decodedToken.uid },
-          { email: decodedToken.email },
-          { phoneNumber: decodedToken.phone_number },
-        ],
-      });
+      const fbQuery = { $or: [{ socialProviderId: decodedToken.uid }] };
+      if (decodedToken.email) fbQuery.$or.push({ email: decodedToken.email });
+      if (decodedToken.phone_number) fbQuery.$or.push({ phoneNumber: decodedToken.phone_number });
+      user = await User.findOne(fbQuery);
 
       if (!user) {
         throw new ValidationError('User not found. Please register first.');
@@ -249,9 +237,11 @@ const login = async (req, res, next) => {
     } else if ((phoneNumber || email) && req.body.otp) {
       // OTP-based login (passwordless) — check user exists before consuming OTP
       const identifier = phoneNumber || email;
-      user = await User.findOne({
-        $or: [{ phoneNumber: phoneNumber }, { email: email }],
-      });
+
+      // Build a precise query — never include undefined fields as they match nulls
+      const query = phoneNumber ? { phoneNumber } : { email };
+      user = await User.findOne(query);
+
       if (!user) {
         // Consume the OTP so it can't be reused, then return a clear error
         await otpService.verifyOTP(identifier, req.body.otp).catch(() => {});
@@ -269,12 +259,9 @@ const login = async (req, res, next) => {
         throw new ValidationError('Password is required');
       }
 
-      user = await User.findOne({
-        $or: [
-          { phoneNumber: phoneNumber },
-          { email: email },
-        ],
-      });
+      // Build a precise query — never include undefined fields as they match nulls
+      const query = phoneNumber ? { phoneNumber } : { email };
+      user = await User.findOne(query);
 
       if (!user) {
         throw new ValidationError('Invalid credentials');

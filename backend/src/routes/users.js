@@ -16,6 +16,19 @@ const router = express.Router();
 router.get('/featured-hosts', userController.getFeaturedHosts);
 router.get('/search', userController.searchUsers);
 
+// Returns the currently authenticated user's full profile
+router.get('/me', authenticate, async (req, res, next) => {
+  try {
+    const user = await require('../models/User').findById(req.userId).select('-passwordHash -__v');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found', code: 'USER_NOT_FOUND' });
+    }
+    res.json(user.toJSON());
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:userId', userController.getProfile);
 
 router.put('/:userId', authenticate, validateRequest(updateProfileSchema), userController.updateProfile);

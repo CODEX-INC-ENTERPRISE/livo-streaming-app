@@ -15,6 +15,7 @@ const paginationSchema = Joi.object({
 const sendOTPSchema = Joi.object({
   phoneNumber: Joi.string().min(7).max(16).optional(),
   email: Joi.string().pattern(emailPattern).optional(),
+  purpose: Joi.string().valid('login', 'register').optional(),
 }).xor('phoneNumber', 'email');
 
 const registerSchema = Joi.object({

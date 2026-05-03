@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/storage_service.dart';
+import '../../providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,32 +18,52 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateAfterDelay();
+    _navigate();
   }
 
-  Future<void> _navigateAfterDelay() async {
-    await Future.delayed(const Duration(seconds: AppConstants.splashDuration));
-    
+  Future<void> _navigate() async {
+    // Wait for minimum splash duration and auth initialization in parallel
+    await Future.wait([
+      Future.delayed(const Duration(seconds: AppConstants.splashDuration)),
+      _waitForAuthInit(),
+    ]);
+
     if (!mounted) return;
-    
-    // Check if user has seen onboarding
-    final hasSeenOnboarding = await _storageService.getBool(AppConstants.hasSeenOnboarding) ?? false;
-    
-    // Check if user is logged in
-    final authToken = await _storageService.getString(AppConstants.authToken);
-    
+
+    final auth = context.read<AuthProvider>();
+    final hasSeenOnboarding =
+        await _storageService.getBool(AppConstants.hasSeenOnboarding) ?? false;
+
     if (!mounted) return;
-    
-    if (authToken != null && authToken.isNotEmpty) {
-      // User is logged in, go to home
+
+    if (auth.isAuthenticated) {
       Navigator.pushReplacementNamed(context, '/home');
     } else if (hasSeenOnboarding) {
-      // User has seen onboarding, go to login
       Navigator.pushReplacementNamed(context, '/login');
     } else {
-      // First time user, show onboarding
       Navigator.pushReplacementNamed(context, '/onboarding');
     }
+  }
+
+  /// Waits until AuthProvider finishes its initialize() call.
+  Future<void> _waitForAuthInit() async {
+    final auth = context.read<AuthProvider>();
+    // If already done (not loading), return immediately
+    if (!auth.isLoading) return;
+    // Otherwise wait for the next non-loading state
+    final completer = Completer<void>();
+    void listener() {
+      if (!auth.isLoading) {
+        auth.removeListener(listener);
+        if (!completer.isCompleted) completer.complete();
+      }
+    }
+    auth.addListener(listener);
+    // Safety timeout — don't block splash forever
+    await completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {},
+    );
   }
 
   @override

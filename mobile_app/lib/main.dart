@@ -59,7 +59,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) {
+          final auth = AuthProvider();
+          // Validate stored token against backend on startup.
+          // This prevents stale sessions from a previous user being loaded.
+          auth.initialize();
+          return auth;
+        }),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => LiveStreamProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
