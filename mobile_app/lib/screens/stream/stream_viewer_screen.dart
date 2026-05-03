@@ -49,6 +49,9 @@ class _StreamViewerScreenState extends State<StreamViewerScreen> {
     final streamProvider = context.read<LiveStreamProvider>();
     try {
       final stream = await streamProvider.joinStream(widget.streamId);
+
+      // Reset engine in case of stale singleton state
+      await _streamService.reset();
       await _streamService.initialize();
       _remoteJoinedSub = _streamService.onRemoteUserJoined.listen((uid) {
         if (mounted) setState(() => _remoteUid = uid);

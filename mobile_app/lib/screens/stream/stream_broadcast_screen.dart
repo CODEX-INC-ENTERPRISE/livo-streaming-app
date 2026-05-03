@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/stream_service.dart';
@@ -49,8 +50,34 @@ class _StreamBroadcastScreenState extends State<StreamBroadcastScreen> {
   }
 
   Future<void> _startStream() async {
+    // Request camera + mic permissions before doing anything
+    final cameraStatus = await Permission.camera.request();
+    final micStatus = await Permission.microphone.request();
+
+    if (!mounted) return;
+
+    if (cameraStatus.isDenied || micStatus.isDenied) {
+      setState(() {
+        _isStarting = false;
+        _error = 'Camera and microphone permissions are required to go live.\n\nPlease grant them in Settings.';
+      });
+      return;
+    }
+
+    if (cameraStatus.isPermanentlyDenied || micStatus.isPermanentlyDenied) {
+      setState(() {
+        _isStarting = false;
+        _error = 'Camera or microphone permission was permanently denied.\n\nPlease enable them in your device Settings.';
+      });
+      await openAppSettings();
+      return;
+    }
+
     final streamProvider = context.read<LiveStreamProvider>();
     try {
+      // Reset engine in case of stale singleton state
+      await _streamService.reset();
+
       // 1. Start stream on backend
       final stream = await streamProvider.startStream(widget.streamTitle);
 

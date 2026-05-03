@@ -45,16 +45,32 @@ class StreamService {
 
   bool get isInitialized => _isInitialized;
 
+  // ─── Reset (call before re-initializing after a failed state) ────────────────
+
+  Future<void> reset() async {
+    if (_engine != null) {
+      try { await _engine!.leaveChannel(); } catch (_) {}
+      try { await _engine!.release(); } catch (_) {}
+      _engine = null;
+    }
+    _isInitialized = false;
+  }
+
   // ─── Initialization ──────────────────────────────────────────────────────────
 
   /// Initialize the Agora RTC engine. Must be called before any other method.
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized && _engine != null) return;
+
+    // Reset any stale state (e.g. after hot restart)
+    if (_isInitialized && _engine == null) {
+      _isInitialized = false;
+    }
 
     final appId = EnvConfig.agoraAppId;
     if (appId.isEmpty || appId == 'YOUR_AGORA_APP_ID') {
       Logger.warning('Agora App ID not configured — video streaming disabled');
-      return; // Don't throw, just skip
+      return;
     }
 
     try {
@@ -66,13 +82,15 @@ class StreamService {
 
       _registerEventHandlers();
       await _engine!.enableVideo();
+      await _engine!.enableAudio();
 
       _isInitialized = true;
       Logger.info('Agora RTC engine initialized');
     } catch (e) {
       Logger.error('Failed to initialize Agora engine', e);
       _engine = null;
-      // Don't rethrow — app should work without Agora
+      _isInitialized = false;
+      rethrow; // Surface the error so the screen can show it
     }
   }
 
