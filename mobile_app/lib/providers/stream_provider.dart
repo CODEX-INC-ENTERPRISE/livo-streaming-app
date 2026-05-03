@@ -232,10 +232,12 @@ class LiveStreamProvider extends ChangeNotifier {
               kickedUserIds: [],
               moderatorIds: [],
               agoraChannelId: body['agoraChannelId'] as String?,
+              agoraToken: body['agoraToken'] as String?,
             ),
           );
           stream = existing.copyWith(
             agoraChannelId: body['agoraChannelId'] as String? ?? existing.agoraChannelId,
+            agoraToken: body['agoraToken'] as String? ?? existing.agoraToken,
           );
         } else {
           stream = LiveStream.fromJson(body);

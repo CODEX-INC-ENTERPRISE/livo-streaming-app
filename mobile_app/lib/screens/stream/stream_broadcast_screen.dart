@@ -58,7 +58,7 @@ class _StreamBroadcastScreenState extends State<StreamBroadcastScreen> {
       await _streamService.initialize();
       await _streamService.startBroadcasting(
         channelId: stream.agoraChannelId ?? stream.id,
-        token: '', // Token provided by backend in production
+        token: stream.agoraToken ?? '',
       );
 
       if (mounted) setState(() => _isStarting = false);

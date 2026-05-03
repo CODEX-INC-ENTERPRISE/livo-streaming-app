@@ -1,4 +1,5 @@
 import '../constants/app_constants.dart';
+import '../constants/environment.dart';
 
 /// Supported application environments.
 enum AppEnvironment {
@@ -78,19 +79,7 @@ class EnvConfig {
   }
 
   /// The Agora App ID for the current environment.
-  ///
-  /// Replace the placeholder values with real App IDs from the Agora Console.
-  static String get agoraAppId {
-    const devId = String.fromEnvironment(
-      'AGORA_APP_ID_DEV',
-      defaultValue: AppConstants.agoraAppId,
-    );
-    const prodId = String.fromEnvironment(
-      'AGORA_APP_ID_PROD',
-      defaultValue: AppConstants.agoraAppId,
-    );
-    return _environment == AppEnvironment.production ? prodId : devId;
-  }
+  static String get agoraAppId => Environment.agoraAppId;
 
   /// The WebSocket server URL for the current environment.
   static String get socketUrl {

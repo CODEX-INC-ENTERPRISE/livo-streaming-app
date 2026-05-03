@@ -66,7 +66,7 @@ class AppConstants {
 
   // ─── Agora ────────────────────────────────────────────────────────────────────
   /// Placeholder – set the real App ID via [EnvConfig.agoraAppId].
-  static const String agoraAppId = 'YOUR_AGORA_APP_ID';
+  static const String agoraAppId = '5199b1d9a24c483391eb9f333fdea2db';
 
   // ─── Timing ───────────────────────────────────────────────────────────────────
   /// Duration (seconds) the splash screen is shown before navigating.

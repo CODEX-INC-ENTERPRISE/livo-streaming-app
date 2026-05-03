@@ -12,6 +12,7 @@ import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/followers_screen.dart';
 import '../../screens/stream/stream_broadcast_screen.dart';
 import '../../screens/stream/stream_viewer_screen.dart';
+import '../../screens/stream/pre_live_setup_screen.dart';
 import '../../screens/voice_room/voice_room_screen.dart';
 import '../../screens/wallet/wallet_screen.dart';
 import '../../screens/wallet/purchase_coins_screen.dart';
@@ -49,6 +50,7 @@ class AppRoutes {
   // ─── Stream ───────────────────────────────────────────────────────────────────
   static const String streamView = '/stream/view';
   static const String streamStart = '/stream/start';
+  static const String preLiveSetup = '/stream/pre-live-setup';
 
   // ─── Voice Room ───────────────────────────────────────────────────────────────
   static const String voiceRoom = '/voice-room';
@@ -103,6 +105,7 @@ class AppRoutes {
                   'Live Stream';
           return StreamBroadcastScreen(streamTitle: title);
         },
+        preLiveSetup: (_) => const PreLiveSetupScreen(),
         voiceRoom: (context) {
           final room = ModalRoute.of(context)?.settings.arguments as VoiceRoom?;
           if (room == null) return const _PlaceholderScreen(title: 'Voice Room');

@@ -22,6 +22,7 @@ class LiveStream {
   final List<String> kickedUserIds;
   final List<String> moderatorIds;
   final String? agoraChannelId;
+  final String? agoraToken;
 
   const LiveStream({
     required this.id,
@@ -40,6 +41,7 @@ class LiveStream {
     required this.kickedUserIds,
     required this.moderatorIds,
     this.agoraChannelId,
+    this.agoraToken,
   });
 
   factory LiveStream.fromJson(Map<String, dynamic> json) {
@@ -80,6 +82,7 @@ class LiveStream {
       kickedUserIds: List<String>.from(json['kickedUserIds'] ?? []),
       moderatorIds: List<String>.from(json['moderatorIds'] ?? []),
       agoraChannelId: json['agoraChannelId'] as String?,
+      agoraToken: json['agoraToken'] as String?,
     );
   }
 
@@ -119,6 +122,7 @@ class LiveStream {
     List<String>? kickedUserIds,
     List<String>? moderatorIds,
     String? agoraChannelId,
+    String? agoraToken,
   }) {
     return LiveStream(
       id: id ?? this.id,
@@ -137,6 +141,7 @@ class LiveStream {
       kickedUserIds: kickedUserIds ?? this.kickedUserIds,
       moderatorIds: moderatorIds ?? this.moderatorIds,
       agoraChannelId: agoraChannelId ?? this.agoraChannelId,
+      agoraToken: agoraToken ?? this.agoraToken,
     );
   }
 

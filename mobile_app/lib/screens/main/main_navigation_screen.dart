@@ -23,46 +23,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void _onFabTapped() {
     final isLoggedIn = context.read<AuthProvider>().isAuthenticated;
     if (isLoggedIn) {
-      _showStartStreamDialog();
+      Navigator.pushNamed(context, AppRoutes.preLiveSetup);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please log in to start streaming')),
       );
     }
-  }
-
-  void _showStartStreamDialog() {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Start Streaming'),
-        content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(
-            labelText: 'Stream Title',
-            hintText: 'Enter a title for your stream',
-          ),
-          maxLength: 100,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              final title = ctrl.text.trim();
-              if (title.isEmpty) return;
-              Navigator.pop(ctx);
-              Navigator.pushNamed(context, AppRoutes.streamStart,
-                  arguments: title);
-            },
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

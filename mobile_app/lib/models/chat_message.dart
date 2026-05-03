@@ -8,9 +8,12 @@ class ChatMessage {
   final String? voiceRoomId;
   final String senderId;
   final String? senderName;
+  final String? senderAvatarUrl;
   final String message;
   final DateTime timestamp;
   final bool isPinned;
+  /// 'message' | 'join' | 'leave' | 'gift'
+  final String type;
 
   const ChatMessage({
     required this.id,
@@ -18,9 +21,11 @@ class ChatMessage {
     this.voiceRoomId,
     required this.senderId,
     this.senderName,
+    this.senderAvatarUrl,
     required this.message,
     required this.timestamp,
     this.isPinned = false,
+    this.type = 'message',
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -30,9 +35,11 @@ class ChatMessage {
       voiceRoomId: json['voiceRoomId'] as String?,
       senderId: json['senderId'] ?? '',
       senderName: json['senderName'] as String?,
+      senderAvatarUrl: json['senderAvatarUrl'] as String?,
       message: json['message'] ?? '',
       timestamp: DateTime.parse(json['timestamp']),
       isPinned: json['isPinned'] ?? false,
+      type: json['type'] as String? ?? 'message',
     );
   }
 
@@ -43,9 +50,11 @@ class ChatMessage {
       if (voiceRoomId != null) 'voiceRoomId': voiceRoomId,
       'senderId': senderId,
       if (senderName != null) 'senderName': senderName,
+      if (senderAvatarUrl != null) 'senderAvatarUrl': senderAvatarUrl,
       'message': message,
       'timestamp': timestamp.toIso8601String(),
       'isPinned': isPinned,
+      'type': type,
     };
   }
 
@@ -55,9 +64,11 @@ class ChatMessage {
     String? voiceRoomId,
     String? senderId,
     String? senderName,
+    String? senderAvatarUrl,
     String? message,
     DateTime? timestamp,
     bool? isPinned,
+    String? type,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -65,9 +76,11 @@ class ChatMessage {
       voiceRoomId: voiceRoomId ?? this.voiceRoomId,
       senderId: senderId ?? this.senderId,
       senderName: senderName ?? this.senderName,
+      senderAvatarUrl: senderAvatarUrl ?? this.senderAvatarUrl,
       message: message ?? this.message,
       timestamp: timestamp ?? this.timestamp,
       isPinned: isPinned ?? this.isPinned,
+      type: type ?? this.type,
     );
   }
 
