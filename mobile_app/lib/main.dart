@@ -14,18 +14,15 @@ import 'providers/user_provider.dart';
 import 'providers/voice_room_provider.dart';
 import 'providers/wallet_provider.dart';
 
-/// Global navigator key used by [FCMService] to navigate from background
-/// notification taps without requiring a [BuildContext].
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  // Must be called before any async work in main().
+
   WidgetsFlutterBinding.ensureInitialized();
 
 
-  // Select environment. Override with --dart-define=APP_ENV=production for
-  // production builds, or call EnvConfig.setEnvironment() in a flavor entry
-  // point. Defaults to development when APP_ENV is not set.
+
   Logger.info('Environment: ${EnvConfig.label}');
   Logger.info('API base URL: ${EnvConfig.apiBaseUrl}');
 
@@ -37,16 +34,11 @@ void main() async {
     ),
   );
 
-  // Initialise Firebase.
-  // NOTE: Requires a valid google-services.json (Android) and
-  // GoogleService-Info.plist (iOS) to be present. Replace the placeholder
-  // files in android/app/ and ios/Runner/ with real ones from the Firebase
-  // Console before running on a device.
+
   await Firebase.initializeApp();
   Logger.info('Firebase initialised');
 
-  // Initialise Firebase Cloud Messaging (registers background handler,
-  // requests notification permissions, and retrieves the FCM token).
+
   await FCMService().initialize(navigatorKey: navigatorKey);
 
   runApp(const MyApp());
@@ -61,8 +53,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) {
           final auth = AuthProvider();
-          // Validate stored token against backend on startup.
-          // This prevents stale sessions from a previous user being loaded.
+
           auth.initialize();
           return auth;
         }),
