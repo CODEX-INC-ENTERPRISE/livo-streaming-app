@@ -151,9 +151,9 @@ class _StreamViewerScreenState extends State<StreamViewerScreen> {
     return _buildViewer();
   }
 
-  Widget _buildLoading() => Scaffold(
+  Widget _buildLoading() => const Scaffold(
     backgroundColor: Colors.black,
-    body: const Center(
+    body: Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         CircularProgressIndicator(color: AppColors.primaryGreen),
         SizedBox(height: 16),
@@ -269,7 +269,7 @@ class _StreamViewerScreenState extends State<StreamViewerScreen> {
               ),
 
               // ── Like button (right side) ───────────────────────────────────
-              Positioned(
+              const Positioned(
                 right: 12,
                 bottom: 140,
                 child: _LikeButton(),
@@ -497,7 +497,7 @@ class _ViewerAvatarStack extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
+        const SizedBox(
           width: 44,
           height: 24,
           child: Stack(
@@ -506,16 +506,16 @@ class _ViewerAvatarStack extends StatelessWidget {
                 left: 0,
                 child: CircleAvatar(
                   radius: 12,
-                  backgroundColor: const Color(0xFF4CAF50),
-                  child: const Icon(Icons.person, size: 14, color: Colors.white),
+                  backgroundColor: Color(0xFF4CAF50),
+                  child: Icon(Icons.person, size: 14, color: Colors.white),
                 ),
               ),
               Positioned(
                 left: 16,
                 child: CircleAvatar(
                   radius: 12,
-                  backgroundColor: const Color(0xFF2196F3),
-                  child: const Icon(Icons.person, size: 14, color: Colors.white),
+                  backgroundColor: Color(0xFF2196F3),
+                  child: Icon(Icons.person, size: 14, color: Colors.white),
                 ),
               ),
             ],

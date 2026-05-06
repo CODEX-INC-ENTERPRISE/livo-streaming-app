@@ -256,7 +256,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     color: AppColors.textSecondary,
                   ),
                   children: [
-                    TextSpan(
+                    const TextSpan(
                       text: 'We sent a 6-digit code to ',
                     ),
                     TextSpan(

@@ -75,12 +75,12 @@ class _PreLiveSetupScreenState extends State<PreLiveSetupScreen> {
                   Image.asset(
                     'assets/images/home_logo.png',
                     height: 32,
-                    errorBuilder: (_, __, ___) => Row(
+                    errorBuilder: (_, __, ___) => const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.play_arrow,
+                        Icon(Icons.play_arrow,
                             color: AppColors.primaryGreen, size: 28),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           'livo',
                           style: TextStyle(

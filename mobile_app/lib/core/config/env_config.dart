@@ -99,7 +99,7 @@ class EnvConfig {
 
   /// HTTP request timeout for the current environment.
   static Duration get apiTimeout {
-    return Duration(seconds: AppConstants.apiTimeoutSeconds);
+    return const Duration(seconds: AppConstants.apiTimeoutSeconds);
   }
 
   /// Human-readable label for the current environment.

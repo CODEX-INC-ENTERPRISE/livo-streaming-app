@@ -193,13 +193,13 @@ class ApiService {
             return ApiException(serverMessage ?? 'Bad request',
                 statusCode: 400, data: body);
           case 401:
-            return ApiException('Authentication required. Please log in again.',
+            return const ApiException('Authentication required. Please log in again.',
                 statusCode: 401);
           case 403:
-            return ApiException('You do not have permission to perform this action.',
+            return const ApiException('You do not have permission to perform this action.',
                 statusCode: 403);
           case 404:
-            return ApiException('The requested resource was not found.',
+            return const ApiException('The requested resource was not found.',
                 statusCode: 404);
           case 409:
             return ApiException(serverMessage ?? 'Conflict with existing data.',

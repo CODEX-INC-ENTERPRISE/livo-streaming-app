@@ -280,7 +280,7 @@ class _DiscoverContent extends StatelessWidget {
       children: [
         // Featured Hosts section
         if (loadingHosts || featuredHosts.isNotEmpty)
-          _SectionHeader(title: 'Featured Hosts'),
+          const _SectionHeader(title: 'Featured Hosts'),
         if (loadingHosts)
           const SizedBox(
             height: 100,
@@ -292,7 +292,7 @@ class _DiscoverContent extends StatelessWidget {
         const SizedBox(height: 8),
 
         // Voice Rooms section
-        _SectionHeader(title: 'Voice Rooms'),
+        const _SectionHeader(title: 'Voice Rooms'),
         if (loadingRooms)
           const SizedBox(
             height: 120,
@@ -301,7 +301,7 @@ class _DiscoverContent extends StatelessWidget {
         else if (roomsError != null)
           _SectionError(message: roomsError!, onRetry: onRetryRooms)
         else if (voiceRooms.isEmpty)
-          _SectionEmpty(
+          const _SectionEmpty(
             icon: Icons.mic_none,
             message: 'No active voice rooms',
           )

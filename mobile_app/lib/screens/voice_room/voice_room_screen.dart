@@ -632,10 +632,10 @@ class _ParticipantTile extends StatelessWidget {
     return ListTile(
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-      leading: CircleAvatar(
+      leading: const CircleAvatar(
         radius: 20,
         backgroundColor: AppColors.darkSurface,
-        child: const Icon(Icons.person,
+        child: Icon(Icons.person,
             color: AppColors.darkTextSecondary, size: 20),
       ),
       title: Text(
@@ -839,7 +839,7 @@ class _IconButton extends StatelessWidget {
       child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.darkSurface,
           shape: BoxShape.circle,
         ),
