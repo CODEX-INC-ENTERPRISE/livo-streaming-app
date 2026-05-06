@@ -42,18 +42,15 @@ void main() async {
   // GoogleService-Info.plist (iOS) to be present. Replace the placeholder
   // files in android/app/ and ios/Runner/ with real ones from the Firebase
   // Console before running on a device.
-  try {
-    await Firebase.initializeApp();
-    Logger.info('Firebase initialised');
-
-    // Initialise Firebase Cloud Messaging (registers background handler,
-    // requests notification permissions, and retrieves the FCM token).
-    await FCMService().initialize(navigatorKey: navigatorKey);
-  } catch (e) {
-    Logger.info('Firebase initialisation skipped: $e');
-  }
+  await Firebase.initializeApp();
+  Logger.info('Firebase initialised');
 
   runApp(const MyApp());
+
+  // Initialise Firebase Cloud Messaging after the app is running so the
+  // notification permission dialog appears on top of the rendered UI rather
+  // than blocking runApp() and causing a blank screen.
+  FCMService().initialize(navigatorKey: navigatorKey);
 }
 
 class MyApp extends StatelessWidget {
