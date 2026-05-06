@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Social Live Streaming App</string>
+	<string>Livo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>social_live_streaming_app</string>
+	<string>Livo</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -24,15 +24,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+
+	<!-- ── Orientation ─────────────────────────────────────────────────── -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
@@ -41,9 +37,74 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- ── Launch / UI ─────────────────────────────────────────────────── -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+
+	<!-- ── Camera & Microphone (Agora live streaming) ──────────────────── -->
+	<key>NSCameraUsageDescription</key>
+	<string>Livo needs camera access to broadcast your live stream.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Livo needs microphone access so viewers can hear you during your live stream.</string>
+
+	<!-- ── Photo Library (thumbnail picker) ────────────────────────────── -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Livo needs access to your photo library to set a stream thumbnail and profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Livo needs permission to save photos to your library.</string>
+
+	<!-- ── Notifications (FCM) ─────────────────────────────────────────── -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- ── Network (App Transport Security) ───────────────────────────── -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>livo-streaming-app.onrender.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
+	<!-- ── Bluetooth (Agora audio routing) ─────────────────────────────── -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Livo uses Bluetooth to connect to audio devices during live streams.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Livo uses Bluetooth to connect to audio devices during live streams.</string>
+
+	<!-- ── Local Network (Agora SDK) ───────────────────────────────────── -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Livo uses the local network for low-latency live streaming.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_agora-rtc._tcp</string>
+		<string>_agora-rtc._udp</string>
+	</array>
+
+	<!-- ── Face ID (flutter_secure_storage) ────────────────────────────── -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Livo uses Face ID to securely store your login credentials.</string>
 </dict>
 </plist>
