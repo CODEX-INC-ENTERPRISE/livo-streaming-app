@@ -42,12 +42,16 @@ void main() async {
   // GoogleService-Info.plist (iOS) to be present. Replace the placeholder
   // files in android/app/ and ios/Runner/ with real ones from the Firebase
   // Console before running on a device.
-  await Firebase.initializeApp();
-  Logger.info('Firebase initialised');
+  try {
+    await Firebase.initializeApp();
+    Logger.info('Firebase initialised');
 
-  // Initialise Firebase Cloud Messaging (registers background handler,
-  // requests notification permissions, and retrieves the FCM token).
-  await FCMService().initialize(navigatorKey: navigatorKey);
+    // Initialise Firebase Cloud Messaging (registers background handler,
+    // requests notification permissions, and retrieves the FCM token).
+    await FCMService().initialize(navigatorKey: navigatorKey);
+  } catch (e) {
+    Logger.info('Firebase initialisation skipped: $e');
+  }
 
   runApp(const MyApp());
 }

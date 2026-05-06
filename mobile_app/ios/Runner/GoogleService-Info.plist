@@ -1,34 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  PLACEHOLDER FILE - Replace with your real GoogleService-Info.plist from Firebase Console
-
-  Instructions:
-  1. Go to https://console.firebase.google.com/
-  2. Create or select your Firebase project
-  3. Add an iOS app with the Bundle ID matching your iOS app (found in Xcode > Runner > General > Bundle Identifier)
-  4. Download the GoogleService-Info.plist file
-  5. Replace this file with the downloaded GoogleService-Info.plist
-  6. Do NOT commit the real GoogleService-Info.plist to version control
+  NOTE: Replace GOOGLE_APP_ID with the real iOS app ID from Firebase Console:
+  1. Go to https://console.firebase.google.com/ → project livo-app-84e7f
+  2. Add iOS app with bundle ID: com.livo.streamingapp
+  3. Download and replace this file with the generated GoogleService-Info.plist
 -->
 <plist version="1.0">
 <dict>
   <key>CLIENT_ID</key>
-  <string>YOUR_CLIENT_ID.apps.googleusercontent.com</string>
+  <string>588874602493-ios.apps.googleusercontent.com</string>
   <key>REVERSED_CLIENT_ID</key>
-  <string>com.googleusercontent.apps.YOUR_CLIENT_ID</string>
+  <string>com.googleusercontent.apps.588874602493-ios</string>
   <key>API_KEY</key>
-  <string>YOUR_IOS_API_KEY</string>
+  <string>AIzaSyDfriBDQSWio_maCPu6Q4bZY2-8vjpOIV4</string>
   <key>GCM_SENDER_ID</key>
-  <string>YOUR_PROJECT_NUMBER</string>
+  <string>588874602493</string>
   <key>PLIST_VERSION</key>
   <string>1</string>
   <key>BUNDLE_ID</key>
-  <string>com.example.socialLiveStreamingApp</string>
+  <string>com.livo.streamingapp</string>
   <key>PROJECT_ID</key>
-  <string>YOUR_PROJECT_ID</string>
+  <string>livo-app-84e7f</string>
   <key>STORAGE_BUCKET</key>
-  <string>YOUR_PROJECT_ID.appspot.com</string>
+  <string>livo-app-84e7f.appspot.com</string>
   <key>IS_ADS_ENABLED</key>
   <false/>
   <key>IS_ANALYTICS_ENABLED</key>
@@ -40,6 +35,6 @@
   <key>IS_SIGNIN_ENABLED</key>
   <true/>
   <key>GOOGLE_APP_ID</key>
-  <string>1:YOUR_PROJECT_NUMBER:ios:YOUR_APP_ID</string>
+  <string>1:588874602493:ios:REPLACE_WITH_IOS_APP_ID</string>
 </dict>
 </plist>

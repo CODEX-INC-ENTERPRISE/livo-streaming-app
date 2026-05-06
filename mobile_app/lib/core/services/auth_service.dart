@@ -19,7 +19,9 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final fb.FirebaseAuth _firebaseAuth = fb.FirebaseAuth.instance;
+  // Lazy getter — only accessed when Firebase is actually needed (Google/Apple sign-in).
+  // This prevents a crash when Firebase is not yet initialized on first launch.
+  fb.FirebaseAuth get _firebaseAuth => fb.FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final ApiService _apiService = ApiService();
   final StorageService _storageService = StorageService();
