@@ -4,8 +4,7 @@ import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Pre-live setup screen shown when the user taps the FAB to go live.
-/// Matches the design: logo header, title field, category chips, thumbnail
-/// picker, and a "Start Live" button.
+
 class PreLiveSetupScreen extends StatefulWidget {
   const PreLiveSetupScreen({super.key});
 
