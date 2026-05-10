@@ -97,7 +97,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wallet'),
+        title: const Text('Wallet', style: TextStyle(                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xff0E4F26),
+                  ),),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -208,20 +211,27 @@ class _BalanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryGreen, AppColors.signUpGreen],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+    height: 290,
+    margin: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [AppColors.primaryGreen, AppColors.signUpGreen],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-      child: Column(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Stack(
+      children:[
+                Image(image:  const AssetImage('assets/images/loginsignup.png'),
+        width: double.infinity,),
+        Column(
         children: [
+           const SizedBox(height: 28),
           Row(
             children: [
+            
               Expanded(
                 child: _BalanceCard(
                   icon: Icons.monetization_on,
@@ -241,7 +251,7 @@ class _BalanceSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 46),
           Row(
             children: [
               Expanded(
@@ -272,8 +282,9 @@ class _BalanceSection extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
+      ),],
+    ),
+          );
   }
 
   String _format(int value) {

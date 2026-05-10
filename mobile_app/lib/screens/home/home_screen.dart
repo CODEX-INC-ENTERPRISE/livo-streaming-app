@@ -149,8 +149,8 @@ class _HomeScreenState extends State<HomeScreen>
               indicatorSize: TabBarIndicatorSize.label,
               dividerColor: Colors.transparent,
               tabs: const [
-                Tab(text: 'Following'),
                 Tab(text: 'For You'),
+                Tab(text: 'Following'),
               ],
             ),
 
@@ -167,12 +167,24 @@ class _HomeScreenState extends State<HomeScreen>
                   return TabBarView(
                     controller: _tabController,
                     children: [
+                      // For You tab — all streams (index 0 = default)
+                      _StreamGrid(
+                        provider: provider,
+                        streams: provider.activeStreams,
+                        scrollController: _scrollController,
+                        isFetchingMore: _isFetchingMore,
+                        onRefresh: _onRefresh,
+                        onStreamTap: _joinStream,
+                        onLoadInitial: _loadInitial,
+                        emptyMessage: 'No live streams right now',
+                        emptyIcon: Icons.videocam_off_outlined,
+                      ),
                       // Following tab — only streams from followed hosts
                       _StreamGrid(
                         provider: provider,
                         streams: followingStreams,
-                        scrollController: _scrollController,
-                        isFetchingMore: _isFetchingMore,
+                        scrollController: ScrollController(),
+                        isFetchingMore: false,
                         onRefresh: _onRefresh,
                         onStreamTap: _joinStream,
                         onLoadInitial: _loadInitial,
@@ -182,18 +194,6 @@ class _HomeScreenState extends State<HomeScreen>
                         emptyIcon: followingIds.isEmpty
                             ? Icons.person_add_outlined
                             : Icons.videocam_off_outlined,
-                      ),
-                      // For You tab — all streams
-                      _StreamGrid(
-                        provider: provider,
-                        streams: provider.activeStreams,
-                        scrollController: ScrollController(),
-                        isFetchingMore: false,
-                        onRefresh: _onRefresh,
-                        onStreamTap: _joinStream,
-                        onLoadInitial: _loadInitial,
-                        emptyMessage: 'No live streams right now',
-                        emptyIcon: Icons.videocam_off_outlined,
                       ),
                     ],
                   );

@@ -174,7 +174,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Discover'),
+        title: const Text('Discover', style: TextStyle(                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xff0E4F26),
+                  ),),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: _SearchBar(

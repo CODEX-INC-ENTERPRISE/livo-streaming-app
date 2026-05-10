@@ -1,3 +1,5 @@
+import 'dart:ffi' hide Size;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _isBlocked = currentUser.hasBlocked(widget.userId);
         });
-      }    } catch (e) {
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _error = 'Failed to load profile';
@@ -176,7 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Logger.error('Failed to block user', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to block user. Please try again.')),
+          const SnackBar(
+              content: Text('Failed to block user. Please try again.')),
         );
       }
     }
@@ -213,7 +217,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               ),
             ListTile(
-              leading: const Icon(Icons.flag_outlined, color: AppColors.warning),
+              leading:
+                  const Icon(Icons.flag_outlined, color: AppColors.warning),
               title: const Text('Report user'),
               onTap: () {
                 Navigator.pop(context);
@@ -318,6 +323,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SliverToBoxAdapter(
               child: _ProfileStats(
                 user: _user!,
+                onEditProfileTap: () => Navigator.pushNamed(context, AppRoutes.editProfile)
+                    .then((_) => _loadData()),
+                onShareProfileTap: () => Navigator.pushNamed(context, AppRoutes.editProfile)
+                    .then((_) => _loadData()),
                 onFollowersTap: _navigateToFollowers,
                 onFollowingTap: _navigateToFollowing,
               ),
@@ -325,7 +334,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (_user!.bio != null && _user!.bio!.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
                     _user!.bio!,
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -393,7 +403,7 @@ class _ProfileAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 300,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
         background: _AvatarHeader(user: user),
@@ -401,7 +411,7 @@ class _ProfileAppBar extends StatelessWidget {
       actions: [
         if (isOwnProfile)
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.more_vert),
             tooltip: 'Edit Profile',
             onPressed: onEdit,
           )
@@ -436,22 +446,33 @@ class _AvatarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.darkBackground,
+      
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 48), // account for status bar
-          _Avatar(url: user.profilePictureUrl, radius: 48),
+  
+          const SafeArea(
+            child: Text("Profile",
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xff0E4F26))),
+          ),
+         // account for status bar
+         const SizedBox(height: 20),
+          _Avatar(url: user.profilePictureUrl, radius: 80),
           const SizedBox(height: 10),
           Text(
             user.displayName,
             style: const TextStyle(
-              color: AppColors.white,
+              color: AppColors.black,
               fontSize: 20,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
+
           if (user.isHost)
+          const SizedBox(height: 6),
             Container(
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -481,31 +502,106 @@ class _ProfileStats extends StatelessWidget {
   final User user;
   final VoidCallback onFollowersTap;
   final VoidCallback onFollowingTap;
+  final VoidCallback onEditProfileTap;
+  final VoidCallback onShareProfileTap;
+  
 
   const _ProfileStats({
     required this.user,
     required this.onFollowersTap,
     required this.onFollowingTap,
+    required this.onEditProfileTap,
+    required this.onShareProfileTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
         children: [
-          _StatItem(
-            label: 'Followers',
-            value: _formatCount(user.followerCount),
-            onTap: onFollowersTap,
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _StatItem(
+                    label: 'Followers',
+                    value: _formatCount(user.followerCount),
+                    onTap: onFollowersTap,
+                  ),
+                  _Divider(),
+                  _StatItem(
+                    label: 'Following',
+                    value: _formatCount(user.followingCount),
+                    onTap: onFollowingTap,
+                  ),
+
+                  
+                ],
+              ),
+                                  Text(
+            user.bio ?? 'Add a bio to tell people about yourself!',
+            style: const TextStyle(
+              color: AppColors.black,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          _Divider(),
-          _StatItem(
-            label: 'Following',
-            value: _formatCount(user.followingCount),
-            onTap: onFollowingTap,
+            ],
           ),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+            GestureDetector(
+              onTap: onEditProfileTap,
+              child: Container(
+             
+                margin: const EdgeInsets.only(top: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
+                decoration: BoxDecoration(
+                  color: AppColors.signUpGreen,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 14.67,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+
+              const SizedBox(width: 16),
+
+                          GestureDetector(
+              onTap: onEditProfileTap,
+              child: Container(
+              
+                margin: const EdgeInsets.only(top: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
+                decoration: BoxDecoration(
+                  color: const Color(0xffE0F1E6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Share Profile',
+                  style: TextStyle(
+                    color: AppColors.black,
+                    fontSize: 14.67,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          
+          )
         ],
       ),
     );
