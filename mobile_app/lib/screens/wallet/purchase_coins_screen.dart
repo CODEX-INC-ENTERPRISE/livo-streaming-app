@@ -247,8 +247,7 @@ class _CurrentBalance extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.monetization_on,
-              color: AppColors.coinYellow, size: 28),
+          const Image(image: AssetImage('assets/images/Coin.png'), height: 28, width: 28,),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,8 +308,7 @@ class _PackageCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.monetization_on,
-                      color: AppColors.coinYellow, size: 32),
+                const Image(image: AssetImage('assets/images/Coin.png'), height: 28, width: 28,),
                   const SizedBox(height: 6),
                   Text(
                     _formatCoins(package.coins),

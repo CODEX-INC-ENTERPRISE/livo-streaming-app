@@ -416,16 +416,7 @@ class _ProfileAppBar extends StatelessWidget {
             onPressed: onEdit,
           )
         else ...[
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Center(
-              child: _FollowButton(
-                isFollowing: isFollowing,
-                isLoading: isFollowLoading,
-                onTap: onFollow,
-              ),
-            ),
-          ),
+          const SizedBox(width: 0),
           if (onMoreOptions != null)
             IconButton(
               icon: const Icon(Icons.more_vert),
@@ -438,8 +429,11 @@ class _ProfileAppBar extends StatelessWidget {
   }
 }
 
+
+
 class _AvatarHeader extends StatelessWidget {
   final User user;
+  
 
   const _AvatarHeader({required this.user});
 

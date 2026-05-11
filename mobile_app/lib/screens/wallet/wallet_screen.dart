@@ -227,31 +227,68 @@ class _BalanceSection extends StatelessWidget {
                 Image(image:  const AssetImage('assets/images/loginsignup.png'),
         width: double.infinity,),
         Column(
-        children: [
-           const SizedBox(height: 28),
-          Row(
-            children: [
+         crossAxisAlignment: CrossAxisAlignment.center,
             
+        children: [
+          Text("Total Earnings", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: Colors.white),),
+          //  const SizedBox(height: 20),
+          Row(
+             mainAxisAlignment: MainAxisAlignment.center,
+             crossAxisAlignment: CrossAxisAlignment.center,
+            
+            children: [
+              
               Expanded(
-                child: _BalanceCard(
-                  icon: Icons.monetization_on,
-                  iconColor: AppColors.coinYellow,
-                  label: 'Coins',
-                  value: _format(coinBalance),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _BalanceCard(
-                  icon: Icons.diamond,
-                  iconColor: AppColors.diamondBlue,
-                  label: 'Diamonds',
-                  value: _format(diamondBalance),
-                ),
-              ),
+                child: Row(children: [
+                  Expanded(child: Column(
+                    children: [
+                      Text("Total Coins", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),),
+                      Row(
+                        children: [
+                          Image(image: AssetImage('assets/images/Coin.png'), height: 22, width: 22,),
+                          
+                          Text( _format(coinBalance), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),),
+                        ],
+                      ),
+                    ],
+                  )),
+                  const SizedBox(width: 20),
+                  Expanded(child: Image(image: AssetImage('assets/images/switch.png'),)),
+                  const SizedBox(width: 20),
+                  Expanded(child: Column(
+                    children: [
+                      Text("Currency", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white),),
+                      Row(
+                        children: [
+                          Text("₦", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),),
+                          const SizedBox(width: 4),
+                          Text( _format(diamondBalance), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),),
+                        ],
+                      ),
+                    ],
+                  )),
+                ],),
+              )
+              // Expanded(
+              //   child: _BalanceCard(
+              //     icon: Icons.monetization_on,
+              //     iconColor: AppColors.coinYellow,
+              //     label: 'Coins',
+              //     value: _format(coinBalance),
+              //   ),
+              // ),
+              // const SizedBox(width: 16),
+              // Expanded(
+              //   child: _BalanceCard(
+              //     icon: Icons.diamond,
+              //     iconColor: AppColors.diamondBlue,
+              //     label: 'Diamonds',
+              //     value: _format(diamondBalance),
+              //   ),
+              // ),
             ],
           ),
-          const SizedBox(height: 46),
+          const SizedBox(height: 26),
           Row(
             children: [
               Expanded(

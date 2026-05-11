@@ -13,6 +13,11 @@ const adminStreamController = require('../controllers/adminStreamController');
 const adminFinancialController = require('../controllers/adminFinancialController');
 const adminReportController = require('../controllers/adminReportController');
 const adminModerationController = require('../controllers/adminModerationController');
+const adminAuthController = require('../controllers/adminAuthController');
+
+// Admin authentication routes (public — no token required)
+router.post('/admin/auth/login', adminAuthController.login);
+router.post('/admin/auth/logout', authenticate, requireAdmin, adminAuthController.logout);
 
 // Admin user management routes
 router.get('/admin/users', authenticate, requireAdmin, validateQuery(paginationSchema), adminUserController.getUsers);
@@ -22,10 +27,11 @@ router.get('/admin/users/:userId/activity', authenticate, requireAdmin, validate
 
 // Admin stream monitoring routes
 router.get('/admin/streams', authenticate, requireAdmin, validateQuery(paginationSchema), adminStreamController.getStreams);
+router.get('/admin/streams/flagged', authenticate, requireAdmin, validateQuery(paginationSchema), adminStreamController.getFlaggedStreams);
 router.get('/admin/streams/:streamId', authenticate, requireAdmin, adminStreamController.getStreamDetails);
+router.get('/admin/streams/:streamId/chat', authenticate, requireAdmin, adminStreamController.getStreamChat);
 router.post('/admin/streams/:streamId/terminate', authenticate, requireAdmin, adminStreamController.terminateStream);
 router.post('/admin/streams/:streamId/flag', authenticate, requireAdmin, adminStreamController.flagStream);
-router.get('/admin/streams/flagged', authenticate, requireAdmin, validateQuery(paginationSchema), adminStreamController.getFlaggedStreams);
 
 // Admin financial tracking routes
 router.get('/admin/analytics/revenue', authenticate, requireAdmin, validateQuery(paginationSchema), adminFinancialController.getRevenueAnalytics);

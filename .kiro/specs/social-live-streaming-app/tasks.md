@@ -876,11 +876,11 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 5.1, 5.2, 5.3_
 
 
-- [ ] 28. Checkpoint - Mobile app core functionality complete
+- [x] 28. Checkpoint - Mobile app core functionality complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 29. Admin Dashboard: Project setup
-  - [ ] 29.1 Create HTML structure
+- [x] 29. Admin Dashboard: Project setup
+  - [x] 29.1 Create HTML structure
     - Create index.html with semantic HTML5 structure
     - Set up navigation sidebar with menu items
     - Create main content area for dynamic content
@@ -889,7 +889,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Include Socket.io client library
     - _Requirements: General admin dashboard structure_
   
-  - [ ] 29.2 Create CSS styling
+  - [x] 29.2 Create CSS styling
     - Configure TailwindCSS theme
     - Create custom CSS for dashboard layout
     - Style navigation sidebar
@@ -898,7 +898,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Ensure responsive design
     - _Requirements: General UI requirements_
   
-  - [ ] 29.3 Set up JavaScript modules
+  - [x] 29.3 Set up JavaScript modules
     - Create main.js for initialization
     - Create api.js for API client
     - Create auth.js for authentication
@@ -909,8 +909,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Create withdrawals.js for withdrawal management
     - _Requirements: General admin functionality_
 
-- [ ] 30. Admin Dashboard: Authentication
-  - [ ] 30.1 Implement admin login
+- [x] 30. Admin Dashboard: Authentication
+  - [x] 30.1 Implement admin login
     - Create login page with email and password fields
     - Implement login form submission
     - Call backend admin login endpoint
@@ -919,15 +919,15 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Display error messages on failure
     - _Requirements: Admin authentication_
   
-  - [ ] 30.2 Implement API client
+  - [x] 30.2 Implement API client
     - Create AdminAPI class
     - Implement request method with authentication header
     - Handle API errors and display messages
     - Implement token refresh logic
     - _Requirements: 30.1, 30.2_
 
-- [ ] 31. Admin Dashboard: User management
-  - [ ] 31.1 Create users list page
+- [x] 31. Admin Dashboard: User management
+  - [x] 31.1 Create users list page
     - Display users table with columns: ID, name, email, status, registered date
     - Implement search functionality
     - Implement pagination
@@ -935,7 +935,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Fetch users from backend API
     - _Requirements: 21.1_
   
-  - [ ] 31.2 Create user detail view
+  - [x] 31.2 Create user detail view
     - Display detailed user information
     - Display user activity logs
     - Display user statistics (streams, followers, transactions)
@@ -943,7 +943,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Fetch user details from backend
     - _Requirements: 21.2, 21.5_
   
-  - [ ] 31.3 Implement user editing
+  - [x] 31.3 Implement user editing
     - Create edit user modal or page
     - Allow editing display name, email, status
     - Implement form validation
@@ -951,7 +951,7 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Refresh user list on success
     - _Requirements: 21.4_
   
-  - [ ] 31.4 Implement user blocking
+  - [x] 31.4 Implement user blocking
     - Add block/unblock button
     - Show confirmation dialog
     - Call backend to block user
@@ -959,8 +959,8 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - _Requirements: 21.3_
 
 
-- [ ] 32. Admin Dashboard: Stream monitoring
-  - [ ] 32.1 Create active streams page
+- [x] 32. Admin Dashboard: Stream monitoring
+  - [x] 32.1 Create active streams page
     - Display active streams table with host, viewers, duration
     - Show real-time viewer count updates
     - Add view and terminate buttons
@@ -968,28 +968,28 @@ The implementation follows a bottom-up approach: core infrastructure first, then
     - Fetch active streams from backend
     - _Requirements: 22.1_
   
-  - [ ] 32.2 Implement stream viewing
+  - [x] 32.2 Implement stream viewing
     - Create stream viewer modal
     - Embed stream video player
     - Display stream chat
     - Allow admin to view any active stream
     - _Requirements: 22.2_
   
-  - [ ] 32.3 Implement stream termination
+  - [x] 32.3 Implement stream termination
     - Add terminate button with confirmation
     - Call backend to terminate stream
     - Remove stream from active list
     - Show success message
     - _Requirements: 22.3_
   
-  - [ ] 32.4 Create stream history page
+  - [x] 32.4 Create stream history page
     - Display past streams table with filters
     - Show stream metadata and statistics
     - Add flag for review button
     - Implement pagination
     - _Requirements: 22.4, 22.5_
   
-  - [ ] 32.5 Implement real-time updates
+  - [x] 32.5 Implement real-time updates
     - Connect to backend via Socket.io
     - Listen for stream:started event
     - Listen for stream:ended event

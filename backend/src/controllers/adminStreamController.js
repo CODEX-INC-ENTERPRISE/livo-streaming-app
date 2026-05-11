@@ -33,6 +33,8 @@ const getStreams = async (req, res, next) => {
     const skip = (page - 1) * limit;
     const status = req.query.status; // 'active', 'ended', 'terminated', or undefined for all
     const search = req.query.search || '';
+    const startDate = req.query.startDate || '';
+    const endDate = req.query.endDate || '';
 
     const query = {};
 
@@ -44,11 +46,30 @@ const getStreams = async (req, res, next) => {
       query.status = status;
     }
 
-    // Search functionality
+    // Search functionality — match title or host display name via a join-style approach
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
       ];
+    }
+
+    // Date range filter on startedAt
+    if (startDate || endDate) {
+      query.startedAt = {};
+      if (startDate) {
+        const from = new Date(startDate);
+        if (!isNaN(from)) query.startedAt.$gte = from;
+      }
+      if (endDate) {
+        // Include the full end day by setting time to end-of-day
+        const to = new Date(endDate);
+        if (!isNaN(to)) {
+          to.setHours(23, 59, 59, 999);
+          query.startedAt.$lte = to;
+        }
+      }
+      // Remove empty object if neither date was valid
+      if (Object.keys(query.startedAt).length === 0) delete query.startedAt;
     }
 
     // Get total count
@@ -423,10 +444,55 @@ const getFlaggedStreams = async (req, res, next) => {
   }
 };
 
+/**
+ * Get chat messages for a stream
+ * GET /api/admin/streams/:streamId/chat
+ * Validates: Requirements 22.2
+ */
+const getStreamChat = async (req, res, next) => {
+  try {
+    const { streamId } = req.params;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 200);
+
+    const stream = await Stream.findById(streamId).lean();
+    if (!stream) {
+      throw new NotFoundError('Stream not found');
+    }
+
+    const messages = await ChatMessage.find({ streamId })
+      .populate('senderId', 'displayName profilePictureUrl')
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+
+    // Return in chronological order (oldest first)
+    const formattedMessages = messages.reverse().map(msg => ({
+      id: msg._id,
+      senderName: msg.senderId?.displayName || 'Unknown',
+      senderProfilePicture: msg.senderId?.profilePictureUrl || null,
+      message: msg.message,
+      timestamp: msg.timestamp,
+      isPinned: msg.isPinned || false,
+    }));
+
+    res.json({
+      messages: formattedMessages,
+      total: formattedMessages.length,
+    });
+  } catch (error) {
+    logger.error('Get stream chat error', {
+      error: error.message,
+      streamId: req.params.streamId,
+    });
+    next(error);
+  }
+};
+
 module.exports = {
   getStreams,
   getStreamDetails,
   terminateStream,
   flagStream,
   getFlaggedStreams,
+  getStreamChat,
 };
